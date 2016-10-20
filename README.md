@@ -2,4 +2,5 @@
 three-pivot quicksort + novel linear time suffix array construction algorithm
 
 # info
-more info will come soon
+See comments in daware.h for info on the new SACA
+See quick.h for the three pivot quicksort
