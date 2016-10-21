@@ -10,7 +10,7 @@ See quick.h for the three pivot quicksort
 ####benchmark results for the modified libdivsuft on the gauntlet corpus (times include ONLY the trsort/daware calls):
 
 | File          |     Size     |      trsort | daware    | OMP trsort | OMP daware |
-|---------------|:------------:|------------:|-----------|------------|------------|
+|---------------|-------------:|------------:|----------:|-----------:|-----------:|
 | abac          |      200.000 |   **0.000** |     0.001 |      0.000 |      0.001 |
 | *abac2*       | *44.190.433* | ***0.094*** |   *0.095* |    *0.095* |    *0.095* |
 | abba          |   10.500.596 |       0.434 | **0.302** |      0.470 |      0.305 |
@@ -35,7 +35,7 @@ it is NOT included in the sum.
 ####benchmark results for enwik8 and enwik9 from the LTCB (times include ONLY the trsort/daware calls):
 
 | File   |      Size     | trsort | daware | OMP trsort | OMP daware |
-|--------|:-------------:|-------:|--------|------------|------------|
+|--------|--------------:|-------:|-------:|-----------:|-----------:|
 | enwik8 |   100.000.000 |  2.226 |  2.204 |      2.222 |  **2.194** |
 | enwik9 | 1.000.000.000 | 39.488 | 33.132 |     39.455 | **33.120** |
 
