@@ -23,7 +23,7 @@ See quick.h for the three pivot quicksort
 | test1         |    2.097.152 |       0.062 | **0.044** |      0.084 |      0.060 |
 | test2         |    2.097.152 |   **0.032** |     0.044 |      0.040 |      0.061 |
 | test3         |    2.097.088 |       0.040 | **0.017** |      0.076 |      0.026 |
-| sum           | 111.214.007  |       3.335 | **2.093** |      3.429 |      2.185 |
+| sum           |   67.023.574 |       3.335 | **2.093** |      3.429 |      2.185 |
 
 The OMP Version is libdivsufsort compiled with OpenMP. While both trsort and
 daware are both single threaded the times are quiet influenced for small files
