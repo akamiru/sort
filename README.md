@@ -1,13 +1,13 @@
 # sort
-three-pivot quicksort + novel linear time suffix array construction algorithm
+three-pivot quicksort + novel linear time suffix array construction algorithm by depth awareness
 
 # info
 See comments in daware.h for info on the new SACA
 
-See quick.h for the three pivot quicksort
+See quick.h for the three-pivot quicksort
 
 # benchmark
-####benchmark results for the modified libdivsuft on the gauntlet corpus (times include ONLY the trsort/daware calls):
+####benchmark results for the modified libdivsufsort on the gauntlet corpus (times include ONLY the trsort/daware calls):
 
 | File          |     Size     |      trsort | daware    | OMP trsort | OMP daware |
 |---------------|-------------:|------------:|----------:|-----------:|-----------:|
@@ -26,7 +26,7 @@ See quick.h for the three pivot quicksort
 | sum           |   67.023.574 |       3.335 | **2.093** |      3.429 |      2.185 |
 
 The OMP Version is libdivsufsort compiled with OpenMP. While both trsort and
-daware are both single threaded the times are quiet influenced for small files
+daware are single threaded the times are quite influenced for small files
 and therefore included in the benchmark.
 
 abac2 is a longer version of abac and NOT an official gauntlet corpus file. Therefore
