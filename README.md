@@ -39,4 +39,4 @@ it is NOT included in the sum.
 | enwik8 |   100.000.000 |  2.226 |  2.204 |      2.222 |  **2.194** |
 | enwik9 | 1.000.000.000 | 39.488 | 33.132 |     39.455 | **33.120** |
 
-All benchmarks where carried out on a i7 4770K with 16 GB RAM. Both were compiled with Visual Studio 2015 under Windows 10 in default Release mode.
+All benchmarks were carried out on a i7 4770K with 16 GB RAM. Both were compiled with Visual Studio 2015 under Windows 10 in default Release mode.
