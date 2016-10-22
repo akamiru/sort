@@ -3,7 +3,9 @@ three-pivot quicksort + novel linear time suffix array construction algorithm by
 
 # info
 See comments in suffix.h for info on the new SACA
+
 See inplace.h for the three-pivot quicksort
+
 Daware is now able to use additional memory to speed up the sorting
 
 # benchmark
