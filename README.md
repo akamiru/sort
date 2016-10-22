@@ -2,9 +2,9 @@
 three-pivot quicksort + novel linear time suffix array construction algorithm by depth awareness
 
 # info
-See comments in daware.h for info on the new SACA
-
-See quick.h for the three-pivot quicksort
+See comments in suffix.h for info on the new SACA
+See inplace.h for the three-pivot quicksort
+Daware is now able to use additional memory to speed up the sorting
 
 # benchmark
 ####benchmark results for the modified libdivsufsort on the gauntlet corpus (times include ONLY the trsort/daware calls):
