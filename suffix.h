@@ -20,6 +20,21 @@
 
 // Linear Time Suffix Sorting By Depth Awareness
 
+// Notes from the author:
+//   This is a reference implementation currently NOT running in O(n)
+//     It uses multi pivot introsort rather than a linear time sorting stage
+//   I would be happy if you file a pull request at github when you change
+//   something
+//     so we can improve the software for everyone. Of course it's your right
+//     not to do so.
+//     If you have questions on this feel free to report an issue.
+//     http://github.com/akamiru
+//   Infos on the algorithm are mainly found in sort::suffix::daware()
+//     currently found around line 205.
+//   I'd really like to thank all authors who make their papers available online
+//     many related papers are cited in the description most of which can be
+//     found on the internet.
+
 #ifndef SORT_SUFFIX_H
 #define SORT_SUFFIX_H
 
@@ -94,7 +109,6 @@ inline T induce(T SA, U ISA, T a, T b, T e, T f, D depth, G group) {
     a = b; b = c; f = e; e = d;
   }
 
-  // @TODO implement induction sort
   // Induce upper part
   while (e != f) {
     for (auto it = f; it != e; --it) {
@@ -166,9 +180,16 @@ inline auto name(T SA, U ISA, D depth) {
     auto ndepth = depth + ((n >> (sizeof(decltype(n)) * CHAR_BIT - 1)) & ~n);
     // auto ndepth = depth + (ISA[*a + depth] < 0 ? -ISA[*a + depth] - 1 : 0);
 
-    // @TODO partition will actually name them except for the lowest part
     // Naming Stage: rename and update depth
     std::for_each(a, b, [ISA, cgroup = castToIndex(a - SA), ndepth](auto c) {
+      // Storing the depth in the next item is possible due to
+      // the fact that we will never sort this pair again.
+      // That this works strongly indicates O(n) time for radix sort
+      // implementation
+      // because it shows that every pair is sorted at max once and there are
+      // only O(n) pairs.
+      // The only problem arises with tandem repeats which need to be sorted
+      // using induction
       ISA[c + 0] = +cgroup;
       ISA[c + 1] = -ndepth;
     });
@@ -192,6 +213,87 @@ template <class T, class U, class V> void daware(T SAf, T SAl, U ISAf, V Sf, V S
 #else
 template <class T, class U, class V> void daware(T SAf, T SAl, U ISAf) {
 #endif
+  // This is a "pulling" or "lazy" rather than a "pushing" version of GSACA
+  //  while GSACA sorts previous elements using info of the current group
+  //  this implementation sorts groups using info of subsequent elements
+  //  in a way related to prefix doubling. For GSACA see
+  // "Linear-time Suffix Sorting - A New Approach for Suffix Array Construction" - Baier
+
+  // More interesting papers on the topic include
+  //  - "Faster suffix sorting" - Larsson, Sadakane (Prefix Doubling)
+  //  - "A Taxonomy of Suffix Array Construction Algorithms" - PUGLISI, SMYTH, TURPIN (General Overview)
+  //  - probably also see "An Efficient Algorithm for Suffix Sorting" - Peng, Wang, Xue, Wei
+  //    because it incorporates depth info into prefix doubling but sadly I
+  //    don't have access to it
+
+  // A "pulling" version allows us to drop all but the additional data
+  // for ISA and sorting depth (correspond to Previous Pointers in GSACA).
+  // see the comment at the naming stage in sort::detail::misc::name() (line 85).
+  // This is more cache friendly and results in less book keeping work.
+  // The depth array can be further emplaced into the ISA to achieve 8 * n
+  // memory usage
+
+  // This is enough to get a O(n) time, O(1) working space SACA using the
+  // Improved Two Stage (ITS) approach
+  // see "Short description of improved two-stage suffix sorting algorithm" - Mori
+  // http://homepage3.nifty.com/wpage/software/itssort.txt
+  // basically it's a single stage of SA-IS
+  // see "Linear Suffix Array Construction by Almost Pure Induced-Sorting" - Nong, Zhang, Chan
+  // [currently the actual worst case working space is O(log(n)) due to
+  // introsort]
+
+  // The current implementation has a worst and average case running time of
+  // O(n * log(n)) due to the fact that it uses multi pivot introsort rather
+  // than a linear time sort (which probably won't change)
+
+  // Additional ideas:
+
+  // "BlockQuicksort: How Branch Mispredictions don't affect Quicksort" - Edelkamp, Weiss
+  // for multi pivot quicksort. But without it the reduced branch mispredictions
+  // probably won't make up for the additional cache misses when not using three
+  // pivot quicksort.
+  // We could check by replacing insertion sort with "Pattern-defeating quicksort" - Peters
+  // and setting the insertion sort limit to INT_MAX
+  // https://github.com/orlp/pdqsort
+  // Tests show a slow down of ~2 due to the amount of cache misses
+
+  // "The Spreadsort High-performance General-case Sorting Algorithm" - Ross
+  // Spreadsort might improve performance over pure quicksort
+  // at least runtime garantee improves somewhat
+
+  // "Improving multikey Quicksort for sorting strings with many equal elements" - Kim, Park
+  // Split-end partitioning for the three way quicksort might not be optimal
+  // because it is only used when we have a big amount of elements equal to
+  // the pivot which results in a lot of copying. "collect-center" might be
+  // faster. But sadly again I have no access to this paper.
+
+  // We might be able to further reduce the cache misses if we could
+  // classify the ISA values to S/L type while building the SA in the
+  // previous stage and only sort the L type in the first stage.
+
+  // Using sorting networks instead of insertion sort for small lists
+  // might increase performance by reducing the number of comparisons.
+  // Maybe compile time construction of Batcher's Odd-Even Mergesort
+  // to keep the code clean.
+
+  // Prefetching ISA when sorting
+  // This should be tested on real data with valgrind - first tests are pretty
+  // mixed
+
+  // If we have additional memory available (with ITS we have an average of n left)
+  // we could first copy SA[i], ISA[SA[i]] together, then sort this list and
+  // then copy back the results. That should reduce the number of cache misses
+  // to near linear (quicksort itself has O(n * log(n)) cache misses with a very
+  // small const factor)
+
+  // Actual implementation:
+  // Start by iterating over all groups right to left
+  // sorting all suffixes until their next smaller suffix
+  // Basically this equals sorting the lyndon words starting at each SA[i]
+  // So this has something to do with Lyndon Trees
+  // which themselves have to do with maximal reptitions
+  // maybe this leads to an even faster approach in those areas
+  // "A new characterization of maximal repetitions by Lyndon trees" - Bannai, I, Inenaga
   for (auto gl = SAl; gl > SAf + 1;) {
     // Name of the group equals the start of the group
     // We don't change it to the end this round because this
