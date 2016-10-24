@@ -228,7 +228,7 @@ template <class T, class U, class V> void daware(T SAf, T SAl, U ISAf) {
 
   // A "pulling" version allows us to drop all but the additional data
   // for ISA and sorting depth (correspond to Previous Pointers in GSACA).
-  // see the comment at the naming stage in sort::detail::misc::name() (line 85).
+  // see the comment at the naming stage in sort::detail::misc::name() (line 185).
   // This is more cache friendly and results in less book keeping work.
   // The depth array can be further emplaced into the ISA to achieve 8 * n
   // memory usage
