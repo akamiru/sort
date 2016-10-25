@@ -315,7 +315,7 @@ template <class T, class U, class V> void daware(T SAf, T SAl, U ISAf) {
           sgf = SAf + ISAf[+sgl[-1]];
 
           if (std::distance(sgf, sgl) < 2) {
-            *sgf = ~*sgf;
+            *--sgl = ~*sgf; // we can directly skip over it
             continue;
           }
 
