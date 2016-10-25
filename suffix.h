@@ -95,8 +95,7 @@ inline T induce(T SA, U ISA, T a, T b, T e, T f, D depth, G group) {
 
   // Use partition if it is less work
   constexpr const int s = sizeof(decltype(*a));  // this saves 3 shifts
-  while (static_cast<uintptr_t>((e - b) * 2 * s - 1) < static_cast<uintptr_t>(((b - a) + (f - e)) * s)) {
-  //while (b != e && (e - b) * 2 * s < ((b - a) + (f - e)) * s) {  // -1 causes underflow when e == b
+  while (b != e && (e - b) * 4 * s < ((b - a) + (f - e)) * s) {
     auto cgroup = castToIndex(b - SA);
     std::for_each(b, e, [ISA, cgroup](auto a) { ISA[a] = cgroup; });
     std::tie(c, d) = detail::misc::partition(b, e, index, cgroup);
@@ -130,7 +129,7 @@ inline T induce(T SA, U ISA, T a, T b, T e, T f, D depth, G group) {
       auto v = *it;
       // If the prev element is in the group
       if (depth <= v && ISA[v = (v - depth)] == group)
-        ISA[*c++ = v] = cgroup;
+        ISA[*c++ = v] = cgroup;  // While naming can be skipped we do not benefit
     }
     // Flag end of lower part to mark it type F
     b[-1] = ~b[-1];
