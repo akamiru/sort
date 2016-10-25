@@ -92,10 +92,12 @@ inline T induce(T SA, U ISA, T a, T b, T e, T f, D depth, G group) {
   // [e, f) = high range           > group
   T c = b, d = e;
 
-  // Use partition if it is less work
   auto castToIndex = detail::misc::castTo<decltype(*ISA)>();
 
-  while (b != e && (e - b) * 2 < (b - a) + (f - e)) {
+  // Use partition if it is less work
+  constexpr const int s = sizeof(decltype(*a));  // this saves 3 shifts
+  while (static_cast<uintptr_t>((e - b) * 2 * s - 1) < static_cast<uintptr_t>(((b - a) + (f - e)) * s)) {
+  //while (b != e && (e - b) * 2 * s < ((b - a) + (f - e)) * s) {  // -1 causes underflow when e == b
     auto cgroup = castToIndex(b - SA);
     std::for_each(b, e, [ISA, cgroup](auto a) { ISA[a] = cgroup; });
     std::tie(c, d) = detail::misc::partition(b, e, index, cgroup);
@@ -104,15 +106,13 @@ inline T induce(T SA, U ISA, T a, T b, T e, T f, D depth, G group) {
 
     // Flag end of lower part if there is one
     if (a != b) b[-1] = ~b[-1];
-
-    // Induce the center
+    // Iterate into the center
     a = b; b = c; f = e; e = d;
   }
 
   // Induce upper part
   while (e != f) {
     for (auto it = f; it != e; --it) {
-      //auto v = (it[-1] >> (sizeof(decltype(it[-1])) * CHAR_BIT - 1)) ^ it[-1];
       auto v = it[-1] < 0 ? ~it[-1] : it[-1];
       // If the prev element is in the group
       if (depth <= v && ISA[v = (v - depth)] == group)
@@ -120,6 +120,7 @@ inline T induce(T SA, U ISA, T a, T b, T e, T f, D depth, G group) {
     }
     // name (needs a second pass to know the beginning)
     std::for_each(d, e, [ISA, cgroup = castToIndex(d - SA)](auto a) { ISA[a] = cgroup; });
+    // Iterate into the left part
     f = e; e = d;
   }
 
@@ -132,10 +133,9 @@ inline T induce(T SA, U ISA, T a, T b, T e, T f, D depth, G group) {
       if (depth <= v && ISA[v = (v - depth)] == group)
         ISA[*c++ = v] = cgroup;
     }
-    // Flag end of lower part
+    // Flag end of lower part to mark it type F
     b[-1] = ~b[-1];
-
-    // Induce the center
+    // Interate into the right part
     a = b; b = c;
   }
   // Flag the center
@@ -176,7 +176,7 @@ inline auto name(T SA, U ISA, D depth) {
 
     // Next sorting depth
     // If it's negative it was already sorted and contains the depth
-    auto n = ISA[*a + depth]; // Get the element following the current
+    auto n = ISA[*a + depth];  // Get the element following the current
     auto ndepth = depth + ((n >> (sizeof(decltype(n)) * CHAR_BIT - 1)) & ~n);
     // auto ndepth = depth + (ISA[*a + depth] < 0 ? -ISA[*a + depth] - 1 : 0);
 
@@ -304,9 +304,8 @@ template <class T, class U, class V> void daware(T SAf, T SAl, U ISAf) {
       // everything left is type F everything right is type S
       T gc = detail::suffix::partition(SAf, ISAf, gf, gl, 1);
 
-      T sgf = gc, sgl = gl;
       // handle all type S subgroups
-      while (gc < sgl) {
+      for (T sgf = gc, sgl = gl; gc < sgl;) {
         if (sgl[-1] < 0) { // is type F ?
           // skip over
           sgl = SAf + ISAf[~sgl[-1]];
@@ -346,7 +345,8 @@ template <class T, class U, class V> void daware(T SAf, T SAl, U ISAf) {
     while (0 <= *gl++);  // End of the group is flagged
     gl[-1] = ~gl[-1];    // Flip the flag
 
-    auto depth = ISAf[*gf + 1] < 0 ? -ISAf[*gf + 1] : 1;
+    auto n = ISAf[*gf + 1]; // Get the element following the current
+    auto depth = 1 + ((n >> (sizeof(decltype(n)) * CHAR_BIT - 1)) & ~n);
     auto index = detail::misc::index(ISAf, depth);
 
     // All elements of the left are already unique so we simply need to sort
