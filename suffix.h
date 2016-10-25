@@ -23,14 +23,13 @@
 // Notes from the author:
 //   This is a reference implementation currently NOT running in O(n)
 //     It uses multi pivot introsort rather than a linear time sorting stage
-//   I would be happy if you file a pull request at github when you change
-//   something
-//     so we can improve the software for everyone. Of course it's your right
-//     not to do so.
+//   I would be happy if you file a pull request on github when you change
+//   something so we can improve the software for everyone. Of course it's 
+//   your right not to do so.
 //     If you have questions on this feel free to report an issue.
 //     http://github.com/akamiru
 //   Infos on the algorithm are mainly found in sort::suffix::daware()
-//     currently found around line 205.
+//     currently found around line 215.
 //   I'd really like to thank all authors who make their papers available online
 //     many related papers are cited in the description most of which can be
 //     found on the internet.
@@ -61,7 +60,7 @@ namespace sort {
 namespace detail {
 
 namespace misc {
-// I refactored this out to always give them the same name
+// I refactored this out to always give it the same name
 // This may result in better code sharing
 template <class U, class D>
 inline auto index(U ISA, D depth) {
@@ -151,8 +150,7 @@ static T partition(T SA, U ISA, T first, T last, D depth) {
   auto index = detail::misc::index(ISA, depth);
 
   // Name of the group equals the index of the first element
-  // Only sort items leading to groups bigger than (or equal = tandem repeats)
-  // to the current
+  // Only sort items leading to groups bigger than the current
   T a, b;
   static_assert(!std::is_reference<T>::value, "T is a reference");
   std::tie(a, b) = detail::misc::partition(first, last, index, first - SA);
@@ -161,7 +159,7 @@ static T partition(T SA, U ISA, T first, T last, D depth) {
   auto castToIndex = detail::misc::castTo<decltype(*ISA)>();
   std::for_each(b, last, [ISA, cgroup = castToIndex(b - SA)](auto c) { ISA[c] = cgroup; });
 
-  // Induce sort the tandem repeats part
+  // Induce sort the tandem repeats part (= equal partition) into type L and S
   return detail::suffix::induce(SA, ISA, first, a, b, last, depth, first - SA);
 }
 
@@ -171,12 +169,12 @@ inline auto name(T SA, U ISA, D depth) {
     auto castToIndex = detail::misc::castTo<decltype(*ISA)>();
     if (std::distance(a, b) < 2) {
       ISA[*a] = castToIndex(a - SA);
-      return (void) (*a = ~*a); // Group is unique - just flag it
+      return (void) (*a = ~*a); // Group is unique - flag it as type F
     }
-
-    // Next sorting depth
-    // If it's negative it was already sorted and contains the depth
-    auto n = ISA[*a + depth];  // Get the element following the current
+    
+    // Get the element following the current
+    auto n = ISA[*a + depth];
+    // If it's negative it was already sorted and contains the current sorting depth
     auto ndepth = depth + ((n >> (sizeof(decltype(n)) * CHAR_BIT - 1)) & ~n);
     // auto ndepth = depth + (ISA[*a + depth] < 0 ? -ISA[*a + depth] - 1 : 0);
 
@@ -184,12 +182,10 @@ inline auto name(T SA, U ISA, D depth) {
     std::for_each(a, b, [ISA, cgroup = castToIndex(a - SA), ndepth](auto c) {
       // Storing the depth in the next item is possible due to
       // the fact that we will never sort this pair again.
-      // That this works strongly indicates O(n) time for radix sort
-      // implementation
+      // That this works strongly indicates O(n) time for radix sort implementation
       // because it shows that every pair is sorted at max once and there are
-      // only O(n) pairs.
-      // The only problem arises with tandem repeats which need to be sorted
-      // using induction
+      // only O(n) pairs.The only problem arises with tandem repeats which need to 
+      // be sorted using induction
       ISA[c + 0] = +cgroup;
       ISA[c + 1] = -ndepth;
     });
@@ -296,20 +292,16 @@ template <class T, class U, class V> void daware(T SAf, T SAl, U ISAf) {
   // "A new characterization of maximal repetitions by Lyndon trees" - Bannai, I, Inenaga
   for (auto gl = SAl; gl > SAf + 1;) {
     // Name of the group equals the start of the group
-    // We don't change it to the end this round because this
-    // would result in some values suddenly getting a lower name
-    // in the recursion which would lead to false sorting.
     auto gf = SAf + ISAf[gl[-1]];
     if (1 < std::distance(gf, gl)) {
-      // everything left is type F everything right is type S
+      // after this call everything left is type F everything right is type S
       T gc = detail::suffix::partition(SAf, ISAf, gf, gl, 1);
 
-      // handle all type S subgroups
+      // handle only the type S subgroups
       for (T sgf = gc, sgl = gl; gc < sgl;) {
-        if (sgl[-1] < 0) { // is type F ?
-          // skip over
-          sgl = SAf + ISAf[~sgl[-1]];
-        } else {  // is type S
+        if (sgl[-1] < 0) { // is type F?
+          sgl = SAf + ISAf[~sgl[-1]]; // skip over
+        } else {  // type S
           // get the start of the group
           sgf = SAf + ISAf[+sgl[-1]];
 
@@ -335,7 +327,7 @@ template <class T, class U, class V> void daware(T SAf, T SAl, U ISAf) {
         }
       }
     } else
-      *gf = ~*gf; // Group is unique - just flag it
+      *gf = ~*gf; // Group is unique - just flag it as type F
     gl = gf;
   }
 
