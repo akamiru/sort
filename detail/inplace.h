@@ -39,10 +39,106 @@
 #include "misc.h"
 
 namespace sort {
-
 namespace detail {
-
 namespace inplace {
+
+template <class T, class I, class V>
+inline std::pair<T, T> partition(T first, T last, I index, V pa) {
+  using W = std::remove_reference_t<decltype(*first)>;
+  // Doesn't assume that pa is in [first, last)
+  // see "Engineering a Sort Function" - BENTLEY, McILROY
+
+  auto a = first, c = std::prev(last);
+  auto b = first, d = last;
+
+  W bv, cv;
+  while (true) {
+    for (V v; b <= c && (v = index(bv = *b)) <= pa; ++b)
+      if (v == pa) *b = *a, *a++ = bv;
+
+    for (V v; b <= c && pa <= (v = index(cv = *c)); --c)
+      if (v == pa) *c = *--d, *d = cv;
+
+    if (b > c) break;
+
+    *c-- = bv; *b++ = cv;
+  }
+
+  auto s = std::min(first + (b - a), a);
+  std::swap_ranges(first, s, b - (s - first));
+
+  auto t = std::min(last + (b - d), d);
+  std::swap_ranges(b, t, last - (t - b));
+
+  return std::make_pair(first + (b - a), last + (b - d));
+}
+
+template <class T, class I, class V>
+inline std::pair<T, T> exchange1(T a, T f, I index, V pa) {
+  using W = std::remove_reference_t<decltype(*a)>;
+  // Assumes pa to be at least the median of 3 elements in [a, f)
+  // see "Engineering a Sort Function" - BENTLEY, McILROY
+
+  // [a, b) == pa, [b, c) <  pa
+  // [c, d) -> unknown elements
+  // [d, e) >  pa, [e, f) == pa
+
+  auto b = a;
+  while (b != f && index(*b) == pa) ++b;
+  if (b == f) return std::make_pair(a, f);
+  b -= a != b; // we need at least one pivot element in the range
+
+  W cv, dv;
+  auto c = b, d = f, e = f;
+  while (true) {
+    V v1, v2;
+    while ((v1 = index(cv = *c++)) < pa);
+    while (pa < (v2 = index(dv = *--d)));
+
+    if (--c >= d) break;
+
+    if (v1 == pa) *d = *--e, *e = cv; else *d = cv;
+    if (v2 == pa) *c = *b, *b++ = dv; else *c = dv;
+    ++c;
+  }
+  d = c + (c == d); // c == d means center element is equal to pa, keep it there
+
+  auto s = std::min(a + (c - b), b);
+  std::swap_ranges(a, s, c - (s - a));
+
+  auto t = std::min(d + (f - e), e);
+  std::swap_ranges(d, t, f - (t - d));
+
+  return std::make_pair(a + (c - b), d + (f - e));
+}
+
+template <class T, class I, class V>
+inline auto exchange3(T first, T last, I index, V pa, V pb, V pc) {
+  using W = std::remove_reference_t<decltype(*first)>;
+  // Assumes pa < pb < pc and all exists within [first, last)
+  // see "How Good is Multi-Pivot Quicksort?" - Aumueller, Dietzfelbinger, Klaue
+  auto a = first, c = last - 1;
+  auto b = first, d = last;
+
+  W bv, cv;
+  V v1, v2;
+  while (true) {
+    for (; !(pb < (v1 = index(bv = *b))); ++b)
+      if (v1 < pa) *b = *a, *a++ = bv;
+
+    for (;  (pb < (v2 = index(cv = *c))); --c)
+      if (v2 > pc) *c = *--d, *d = cv;
+
+    if (b > c)
+      break;
+
+    if (v2 < pa) *b = *a, *a++ = cv; else *b = cv;
+    if (v1 > pc) *c = *--d, *d = bv; else *c = bv;
+    ++b; c--;
+  }
+
+  return std::make_tuple(a, b, d);
+}
 
 template<class V, class T, class I>
 inline std::tuple<V, V, V> pivot(T first, T last, I index) {
@@ -117,7 +213,7 @@ static void quick(T first, T last, I index, C &&cb, int budget) {
       // At least 3 out of 7 were equal to the pivot so switch 
       // to three way quicksort
       T d, e;
-      std::tie(d, e) = detail::misc::exchange1(first, last, index, b);
+      std::tie(d, e) = detail::inplace::exchange1(first, last, index, b);
 
       if (LR) {
         quick<LR>(first, d, index, cb, budget);
@@ -133,7 +229,7 @@ static void quick(T first, T last, I index, C &&cb, int budget) {
     } else {
       // Three pivot quicksort
       T d, e, f;
-      std::tie(d, e, f) = detail::misc::exchange3(first, last, index, a, b, c);
+      std::tie(d, e, f) = detail::inplace::exchange3(first, last, index, a, b, c);
 
       if (LR) {
         quick<LR>(first, d, index, cb, budget);
@@ -151,9 +247,7 @@ static void quick(T first, T last, I index, C &&cb, int budget) {
 }
 
 } // inplace
-
 } // detail
-
 } // sort
 
 #endif  // SORT_DETAIL_INPLACE_H

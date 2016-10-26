@@ -82,7 +82,7 @@ inline T induce(T SA, U ISA, T a, T b, T e, T f, D depth, G group) {
   while (b != e && (e - b) * 4 * s < ((b - a) + (f - e)) * s) {
     auto cgroup = castToIndex(b - SA);
     std::for_each(b, e, [ISA, cgroup](auto a) { ISA[a] = cgroup; });
-    std::tie(c, d) = detail::misc::partition(b, e, index, cgroup);
+    std::tie(c, d) = detail::inplace::partition(b, e, index, cgroup);
     group = cgroup;
     std::for_each(d, e, [ISA, cgroup = castToIndex(d - SA)](auto a) { ISA[a] = cgroup; });
 
@@ -136,7 +136,7 @@ static T partition(T SA, U ISA, T first, T last, D depth) {
   // Only sort items leading to groups bigger than the current
   T a, b;
   static_assert(!std::is_reference<T>::value, "T is a reference");
-  std::tie(a, b) = detail::misc::partition(first, last, index, first - SA);
+  std::tie(a, b) = detail::inplace::partition(first, last, index, first - SA);
 
   // name the type S group
   auto castToIndex = detail::misc::castTo<decltype(*ISA)>();
