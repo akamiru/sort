@@ -40,7 +40,6 @@
 #include "detail/inplace.h"
 
 namespace sort {
-
 namespace inplace {
 
 // Fast general purpose multi pivot introsort
@@ -69,7 +68,6 @@ inline void quick(T first, T last, I index) {
 }
 
 } // inplace
-
 } // sort
 
 #endif  // SORT_INPLACE_H

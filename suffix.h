@@ -57,7 +57,6 @@
 #define USE_COPY
 
 namespace sort {
-
 namespace suffix {
 
 // Sort the suffix array depth aware in (theoretical) linear time
@@ -225,7 +224,6 @@ template <class T, class U, class V> void daware(T SAf, T SAl, U ISAf) {
 }
 
 } // suffix
-
 } // sort
 
 #endif  // SORT_SUFFIX_H

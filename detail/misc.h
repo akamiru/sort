@@ -50,10 +50,9 @@
 #include <type_traits>
 
 namespace sort {
-
 namespace detail {
-
 namespace misc {
+  
 constexpr const int INSERTION_MAX =   32;  // When to switch to insertion sort
 constexpr const int MEDIAN21      =  256;  // When to switch to pseudo median of 21
 constexpr const int MEDIAN65      = 8192;  // When to switch to pseudo median of 65
@@ -270,9 +269,7 @@ auto castTo() {
 }
 
 }  // misc
-
 }  // detail
-
 } // sort
 
 #endif  // SORT_DETAIL_MISC_H

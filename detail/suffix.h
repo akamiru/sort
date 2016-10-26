@@ -57,9 +57,7 @@
 #define USE_COPY
 
 namespace sort {
-
 namespace detail {
-
 namespace suffix {
 
 template <class T, class U, class D, class G>
@@ -179,9 +177,7 @@ inline auto name(T SA, U ISA, D depth) {
 }
 
 } // suffix
-
 } // detail
-
 } // sort
 
 #endif  // SORT_DETAIL_SUFFIX_H

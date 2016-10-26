@@ -53,7 +53,6 @@
 #include "inplace.h"
 
 namespace sort {
-
 namespace copy {
 
 // Oportunistic version of the quicksort
@@ -142,7 +141,6 @@ inline void quick(T first, T last, U Sf, U Sl, I index) {
 }
 
 } // copy
-
 } // sort
 
 #endif  // SORT_COPY_H
