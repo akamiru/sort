@@ -49,47 +49,10 @@
 #include <tuple>
 #include <type_traits>
 
+#include "detail/misc.h"
 #include "inplace.h"
 
 namespace sort {
-
-namespace detail {
-
-namespace misc {
-
-constexpr const int COPY_MIN = 1024;  // Minimum number of elements to use copy
-                                      // multiplied by the size of the pair
-                                      // probably around number of cache lines in L1 cache * 2
-
-template <class V, class T, class I>
-inline std::tuple<V, int> median7_copy(T first, I index) {
-  // Get 3 pivots by sorting 7 elements and returning element 1, 3 and 5
-  // using a sorting network and return the number of equal elements
-
-  V a = index(first[0]);
-  V c = index(first[2]);
-  V e = index(first[4]);
-  V g = index(first[6]);
-
-  cswap(c, g); cswap(a, e);
-  V b = index(first[1]);
-  V f = index(first[5]);
-  cswap(b, f); cswap(e, g);
-  cswap(a, c);
-  V d = index(first[3]);
-  cswap(b, d); cswap(c, e);
-  cswap(d, f); cmovg(a, b);
-  cswap(e, f); cswap(c, d);
-  cswap(b, e); cswap(d, g);
-  cswap(b, c); cswap(d, e);
-  cswap(f, g);
-
-  return std::make_tuple(d, (a == b) + (b == c) + (c == d) + (d == e) + (e == f) + (f == g));
-}
-
-}  // misc
-
-}  // detail
 
 namespace copy {
 
