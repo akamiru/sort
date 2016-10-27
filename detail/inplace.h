@@ -29,6 +29,7 @@
 #pragma warning disable 3373
 #endif
 
+#include <array>
 #include <algorithm>
 #include <climits>
 #include <cmath>
@@ -178,8 +179,8 @@ inline T exchange_block(T first, T last, I index, V p) {
     if (bc == 0) b -= BLOCK_SIZE;
   }
 
-  int r = std::distance(a, b) - ((ac || bc) ? BLOCK_SIZE : 0);
-  int bsa = BLOCK_SIZE, bsb = BLOCK_SIZE; //block size a/b
+  auto r = std::distance(a, b) - ((ac || bc) ? BLOCK_SIZE : 0);
+  std::remove_reference_t<decltype(r)> bsa = BLOCK_SIZE, bsb = BLOCK_SIZE; //block size a/b
 
   if (ac == 0 && bc == 0) {
     au = bu = 0;
@@ -190,7 +191,7 @@ inline T exchange_block(T first, T last, I index, V p) {
       offsets_b[bc] = i; bc += index(b[-i - 1]) < p;
     }
     if (bsb > bsa) { // in case of odd r
-      offsets_b[bc] = bsa; bc += index(b[-bsa - 1]) < p;
+      offsets_b[bc] = static_cast<uint8_t>(bsa); bc += index(b[-bsa - 1]) < p;
     }
   } else if (ac == 0) {
     au = 0;
