@@ -92,11 +92,11 @@ inline void quick(T first, T last, U Sf, U Sl, I index, C cb) {
     };
 
     if (LR) {
-      sort::inplace::quick<LR>(Sf, a, idx, icb);
-      sort::inplace::quick<LR>(a, Sl, idx, icb);
+      sort::inplace::block<LR>(Sf, a, idx, icb);
+      sort::inplace::block<LR>(a, Sl, idx, icb);
     } else {
-      sort::inplace::quick<LR>(a, Sl, idx, icb);
-      sort::inplace::quick<LR>(Sf, a, idx, icb);
+      sort::inplace::block<LR>(a, Sl, idx, icb);
+      sort::inplace::block<LR>(Sf, a, idx, icb);
     }
   } else  // not enough space
     sort::inplace::quick<LR>(first, last, index, cb);
@@ -127,11 +127,11 @@ inline void quick(T first, T last, U Sf, U Sl, I index) {
     auto idx = [](auto a) { return a.second; };
 
     if (LR) {
-      sort::inplace::quick<LR>(Sf, a, idx);
-      sort::inplace::quick<LR>(a, Sl, idx);
+      sort::inplace::block<LR>(Sf, a, idx);
+      sort::inplace::block<LR>(a, Sl, idx);
     } else {
-      sort::inplace::quick<LR>(a, Sl, idx);
-      sort::inplace::quick<LR>(Sf, a, idx);
+      sort::inplace::block<LR>(a, Sl, idx);
+      sort::inplace::block<LR>(Sf, a, idx);
     }
 
     for (auto it = Sf; it != Sl; ++it)

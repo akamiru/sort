@@ -19,7 +19,7 @@
 // IN THE SOFTWARE.
 
 // Three Pivot Quicksort
-//  a three pivot quicksort implementation switching to three way 
+//  a three pivot quicksort implementation switching to three way
 //  partitioning if usefull
 
 #ifndef SORT_DETAIL_INPLACE_H
@@ -112,7 +112,7 @@ inline std::tuple<T, T, T> exchange3(T first, T last, I index, V pa, V pb, V pc)
   using W = std::remove_reference_t<decltype(*first)>;
   // Assumes pa < pb < pc and all exists within [first, last)
   // see "How Good is Multi-Pivot Quicksort?" - Aumueller, Dietzfelbinger, Klaue
-  
+
   auto a = first, c = last - 1;
   auto b = first, d = last;
 
@@ -132,6 +132,93 @@ inline std::tuple<T, T, T> exchange3(T first, T last, I index, V pa, V pb, V pc)
   }
 
   return std::make_tuple(a, b, d);
+}
+
+template <class T, class I, class V>
+inline T exchange_block(T first, T last, I index, V p) {
+  //using W = std::remove_reference_t<decltype(*first)>;
+  // Assumes p is at least median of three and exists within [first, last)
+  // see "BlockQuicksort: How Branch Mispredictions don't affect Quicksort" - Edelkamp, Weiss
+
+  auto a = first, b = last;
+
+  constexpr const int BLOCK_SIZE = detail::misc::BLOCK_SIZE;
+  std::array<uint8_t, BLOCK_SIZE> offsets_a;
+  std::array<uint8_t, BLOCK_SIZE> offsets_b;
+  int ac = 0, bc = 0; // counts
+  int au = 0, bu = 0; // number of used
+
+  while (2 * BLOCK_SIZE <= std::distance(a, b)) {
+    if (ac == 0) {
+      au = 0;
+      for (int i = 0; i < BLOCK_SIZE;) {
+        offsets_a[ac] = i; ac += p <= index(a[i]); ++i;
+        offsets_a[ac] = i; ac += p <= index(a[i]); ++i;
+        offsets_a[ac] = i; ac += p <= index(a[i]); ++i;
+        offsets_a[ac] = i; ac += p <= index(a[i]); ++i;
+      }
+    }
+    if (bc == 0) {
+      bu = 0;
+      for (int i = 0; i < BLOCK_SIZE;) {
+        offsets_b[bc] = i; bc += index(b[-i - 1]) < p; ++i;
+        offsets_b[bc] = i; bc += index(b[-i - 1]) < p; ++i;
+        offsets_b[bc] = i; bc += index(b[-i - 1]) < p; ++i;
+        offsets_b[bc] = i; bc += index(b[-i - 1]) < p; ++i;
+      }
+    }
+
+    int c = std::min(ac, bc);
+    for (int i = 0; i < c; ++i)
+      std::iter_swap(a + offsets_a[au + i], b - offsets_b[bu + i] - 1);
+
+    ac -= c; bc -= c;
+    au += c; bu += c;
+    if (ac == 0) a += BLOCK_SIZE;
+    if (bc == 0) b -= BLOCK_SIZE;
+  }
+
+  int r = std::distance(a, b) - ((ac || bc) ? BLOCK_SIZE : 0);
+  int bsa = BLOCK_SIZE, bsb = BLOCK_SIZE; //block size a/b
+
+  if (ac == 0 && bc == 0) {
+    au = bu = 0;
+    bsa = r / 2; bsb = r - bsa;
+
+    for (int i = 0; i < bsa; ++i) {
+      offsets_a[ac] = i; ac += p <= index(a[i]);
+      offsets_b[bc] = i; bc += index(b[-i - 1]) < p;
+    }
+    if (bsb > bsa) { // in case of odd r
+      offsets_b[bc] = bsa; bc += index(b[-bsa - 1]) < p;
+    }
+  } else if (ac == 0) {
+    au = 0;
+    for (int i = 0; i < (bsa = r); ++i) {
+      offsets_a[ac] = i; ac += p <= index(a[i]);
+    }
+  } else {
+    bu = 0;
+    for (int i = 0; i < (bsb = r); ++i) {
+      offsets_b[bc] = i; bc += index(b[-i - 1]) < p;
+    }
+  }
+
+  int c = std::min(ac, bc);
+  for (int i = 0; i < c; ++i)
+    std::iter_swap(a + offsets_a[au + i], b - offsets_b[bu + i] - 1);
+  ac -= c; bc -= c;
+  au += c; bu += c;
+  if (ac == 0) a += bsa;
+  if (bc == 0) b -= bsb;
+
+  if (ac) {
+    while (ac--) std::iter_swap(a + offsets_a[au + ac], --b);
+    return b;
+  } else {
+    while (bc--) std::iter_swap(a++, b - offsets_b[bu + bc] - 1);
+    return a;
+  }
 }
 
 template<class V, class T, class I>
@@ -183,7 +270,7 @@ inline void insertion(T first, T last, I index, C cb) {
   return detail::misc::call_range<LR>(first, last, index, cb);
 }
 
-template <int LR, class T, class I, class C>
+template <int LR, int P, class T, class I, class C>
 static void quick(T first, T last, I index, C &&cb, int budget) {
   using V = std::remove_reference_t<decltype(index(*first))>;
 
@@ -204,36 +291,47 @@ static void quick(T first, T last, I index, C &&cb, int budget) {
     std::tie(a, b, c) = detail::inplace::pivot<V>(first, last, index);
 
     if (a == b || b == c) {
-      // At least 3 out of 7 were equal to the pivot so switch 
+      // At least 3 out of 7 were equal to the pivot so switch
       // to three way quicksort
       T d, e;
       std::tie(d, e) = detail::inplace::exchange1(first, last, index, b);
 
       if (LR) {
-        quick<LR>(first, d, index, cb, budget);
+        quick<LR, P>(first, d, index, cb, budget);
         if (LR != detail::misc::NOCB)
           cb(d, e); // equal range callback - must exist
         first = e;  // tail recursion
       } else {
-        quick<LR>(e, last, index, cb, budget);
+        quick<LR, P>(e, last, index, cb, budget);
         if (LR != detail::misc::NOCB)
           cb(d, e); // equal range callback - must exist
         last = d;   // tail recursion
       }
-    } else {
+    } else if (P == 0) {
       // Three pivot quicksort
       T d, e, f;
       std::tie(d, e, f) = detail::inplace::exchange3(first, last, index, a, b, c);
 
       if (LR) {
-        quick<LR>(first, d, index, cb, budget);
-        quick<LR>(d, e, index, cb, budget);
-        quick<LR>(e, f, index, cb, budget);
+        quick<LR, P>(first, d, index, cb, budget);
+        quick<LR, P>(d, e, index, cb, budget);
+        quick<LR, P>(e, f, index, cb, budget);
         first = f; // tail recursion
       } else {
-        quick<LR>(f, last, index, cb, budget);
-        quick<LR>(e, f, index, cb, budget);
-        quick<LR>(d, e, index, cb, budget);
+        quick<LR, P>(f, last, index, cb, budget);
+        quick<LR, P>(e, f, index, cb, budget);
+        quick<LR, P>(d, e, index, cb, budget);
+        last = d; // tail recursion
+      }
+    } else {
+      // block quicksort
+      T d = detail::inplace::exchange_block(first, last, index, b);
+
+      if (LR) {
+        quick<LR, P>(first, d, index, cb, budget);
+        first = d; // tail recursion
+      } else {
+        quick<LR, P>(d, last, index, cb, budget);
         last = d; // tail recursion
       }
     }
