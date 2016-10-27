@@ -11,23 +11,20 @@ Daware is now able to use additional memory to speed up the sorting and is recur
 # benchmark
 ####benchmark results for the modified libdivsufsort on the gauntlet corpus (times include ONLY the trsort/daware calls):
 
-| File          |     Size     |  daware   |  trsort   |
-|---------------|-------------:|----------:|----------:|
-| abac          |       200000 |   0.00075 |   0.00047 |
-| abba          |     10500596 |   0.24368 |   0.44355 |
-| book1x20      |     15375420 |   0.35135 |   0.41513 |
-| fib_s14930352 |     14930352 |   0.56601 |   1.27311 |
-| fss10         |     12078908 |   0.33959 |   0.97109 |
-| fss9          |      2851443 |   0.05794 |   0.12842 |
-| houston       |      3839141 |   0.01967 |   0.00467 |
-| paper5x80     |       956322 |   0.01312 |   0.01694 |
-| test1         |      2097152 |   0.04167 |   0.06982 |
-| test2         |      2097152 |   0.03724 |   0.04146 |
-| test3         |      2097088 |   0.02155 |   0.03798 |
-| sum           |     67023574 |   1.69258 |   3.40263 |
-
-abac2 is a longer version of abac and NOT an official gauntlet corpus file. Therefore
-it is NOT included in the sum.
+| File          |     Size     |   daware    |   trsort    |
+|---------------|-------------:|------------:|------------:|
+| abac          |       200000 |     0.00075 | **0.00047** |
+| abba          |     10500596 | **0.24368** |     0.44355 |
+| book1x20      |     15375420 | **0.35135** |     0.41513 |
+| fib_s14930352 |     14930352 | **0.56601** |     1.27311 |
+| fss10         |     12078908 | **0.33959** |     0.97109 |
+| fss9          |      2851443 | **0.05794** |     0.12842 |
+| houston       |      3839141 |     0.01967 | **0.00467** |
+| paper5x80     |       956322 | **0.01312** |     0.01694 |
+| test1         |      2097152 | **0.04167** |     0.06982 |
+| test2         |      2097152 | **0.03724** |     0.04146 |
+| test3         |      2097088 | **0.02155** |     0.03798 |
+| sum           |     67023574 | **1.69258** |     3.40263 |
 
 ####benchmark results for enwik8 and enwik9 from the LTCB (times include ONLY the trsort/daware calls):
 
