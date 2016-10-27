@@ -58,7 +58,7 @@ constexpr const int LR            =    1;  // Direction: left to right
 constexpr const int RL            =    0;  // Direction: right to left
 
 constexpr const int INSERTION_MAX =   32;  // When to switch to insertion sort
-constexpr const int MEDIAN21      =  256;  // When to switch to pseudo median of 21
+constexpr const int MEDIAN21      =   64;  // When to switch to pseudo median of 21
 constexpr const int MEDIAN65      = 8192;  // When to switch to pseudo median of 65
 constexpr const int BLOCK_SIZE    =  128;  // Block Size for block partition ~2 cache lines
 constexpr const int COPY_MIN      = 1024;  // Minimum number of elements to use copy
