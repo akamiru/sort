@@ -26,10 +26,6 @@ Daware is now able to use additional memory to speed up the sorting and is recur
 | test3         |      2097088 |   0.02155 |   0.03798 |
 | sum           |     67023574 |   1.69258 |   3.40263 |
 
-The OMP Version is libdivsufsort compiled with OpenMP. While both trsort and
-daware are single threaded the times are quite influenced for small files
-and therefore included in the benchmark.
-
 abac2 is a longer version of abac and NOT an official gauntlet corpus file. Therefore
 it is NOT included in the sum.
 
@@ -39,6 +35,10 @@ it is NOT included in the sum.
 |--------|--------------:|-------:|-----------:|-----------:|-----------:|
 | enwik8 |   100.000.000 |  2.226 |      2.152 |      2.222 |  **2.151** |
 | enwik9 | 1.000.000.000 | 39.441 |     29.607 |     39.493 | **29.537** |
+
+The OMP Version is libdivsufsort compiled with OpenMP. While both trsort and
+daware are single threaded the times are quite influenced for small files
+and therefore included in the benchmark.
 
 ####benchmark results for Manzini's Corpus (times include ONLY the trsort/daware calls):
 
