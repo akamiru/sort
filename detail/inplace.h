@@ -51,8 +51,8 @@ inline std::pair<T, T> partition(T first, T last, I index, V pa) {
   auto a = first, c = std::prev(last);
   auto b = first, d = last;
 
-  W bv, cv;
   while (true) {
+    W bv, cv;
     for (V v; b <= c && (v = index(bv = *b)) <= pa; ++b)
       if (v == pa) *b = *a, *a++ = bv;
 
@@ -79,19 +79,14 @@ inline std::pair<T, T> exchange1(T a, T f, I index, V pa) {
   // Assumes pa to be at least the median of 3 elements in [a, f)
   // see "Engineering a Sort Function" - BENTLEY, McILROY
 
-  // [a, b) == pa, [b, c) <  pa
-  // [c, d) -> unknown elements
-  // [d, e) >  pa, [e, f) == pa
-
   auto b = a;
   while (b != f && index(*b) == pa) ++b;
   if (b == f) return std::make_pair(a, f);
   b -= a != b; // we need at least one pivot element in the range
 
-  W cv, dv;
   auto c = b, d = f, e = f;
   while (true) {
-    V v1, v2;
+    W cv, dv; V v1, v2;
     while ((v1 = index(cv = *c++)) < pa);
     while (pa < (v2 = index(dv = *--d)));
 
@@ -113,24 +108,23 @@ inline std::pair<T, T> exchange1(T a, T f, I index, V pa) {
 }
 
 template <class T, class I, class V>
-inline auto exchange3(T first, T last, I index, V pa, V pb, V pc) {
+inline std::tuple<T, T, T> exchange3(T first, T last, I index, V pa, V pb, V pc) {
   using W = std::remove_reference_t<decltype(*first)>;
   // Assumes pa < pb < pc and all exists within [first, last)
   // see "How Good is Multi-Pivot Quicksort?" - Aumueller, Dietzfelbinger, Klaue
+  
   auto a = first, c = last - 1;
   auto b = first, d = last;
 
-  W bv, cv;
-  V v1, v2;
   while (true) {
+    W bv, cv; V v1, v2;
     for (; !(pb < (v1 = index(bv = *b))); ++b)
       if (v1 < pa) *b = *a, *a++ = bv;
 
     for (;  (pb < (v2 = index(cv = *c))); --c)
       if (v2 > pc) *c = *--d, *d = cv;
 
-    if (b > c)
-      break;
+    if (b > c) break;
 
     if (v2 < pa) *b = *a, *a++ = cv; else *b = cv;
     if (v1 > pc) *c = *--d, *d = bv; else *c = bv;
@@ -145,7 +139,7 @@ inline std::tuple<V, V, V> pivot(T first, T last, I index) {
   V a, b, c;
   if (std::distance(first, last) < detail::misc::MEDIAN21) {
     // Get 3 pivots using median of 7
-    std::tie(a, b, c) = detail::misc::median7<V>(first, index);
+    return detail::misc::median7<V>(first, index);
   } else if (std::distance(first, last) < detail::misc::MEDIAN65) {
     // Get 3 pivots using pseudo median of 21
     auto middle = first + std::distance(first, last) / 2;
