@@ -56,27 +56,13 @@ namespace inplace {
 template <int LR = detail::misc::LR, class T, class I, class C>
 inline void quick(T first, T last, I index, C cb) {
   int budget = detail::misc::ilogb(last - first + 1);
-  detail::inplace::quick<LR, 0>(first, last, index, cb, budget);
+  detail::inplace::quick<LR>(first, last, index, cb, budget);
 }
 
 template <int LR = detail::misc::LR, class T, class I>
 inline void quick(T first, T last, I index) {
   int budget = detail::misc::ilogb(last - first + 1);
-  detail::inplace::quick<LR, 0>(first, last, index, [](auto a, auto b) {
-    (void)a; (void)b;
-  }, budget);
-}
-  
-template <int LR = detail::misc::LR, class T, class I, class C>
-inline void block(T first, T last, I index, C cb) {
-  int budget = 2 * detail::misc::ilogb(last - first + 1);
-  detail::inplace::quick<LR, 1>(first, last, index, cb, budget);
-}
-
-template <int LR = detail::misc::LR, class T, class I>
-inline void block(T first, T last, I index) {
-  int budget = 2 * detail::misc::ilogb(last - first + 1);
-  detail::inplace::quick<LR, 1>(first, last, index, [](auto a, auto b) {
+  detail::inplace::quick<LR>(first, last, index, [](auto a, auto b) {
     (void)a; (void)b;
   }, budget);
 }
