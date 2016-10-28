@@ -56,7 +56,7 @@ namespace sort {
 
 // Make pair accessible from outside
 using pair = detail::misc::pair;
-	
+
 namespace copy {
 
 // Oportunistic version of the quicksort
@@ -74,9 +74,9 @@ inline void quick(T first, T last, U Sf, U Sl, I index, C cb) {
     Sl = Sf + std::distance(first, last);
 
     // get a pivot
-	  typeC pivot; int equals;
+    typeC pivot; int equals;
     std::tie(pivot, equals) = detail::misc::median7_copy<typeC>(first, index);
-	  if (equals > 5) return sort::inplace::quick<LR>(first, last, index, cb);
+    if (equals > 5) return sort::inplace::quick<LR>(first, last, index, cb);
 
     // copy together
     auto a = Sf, b = Sl;
