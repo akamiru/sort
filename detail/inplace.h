@@ -146,10 +146,10 @@ inline T exchange_block(T first, T last, I index, V p) {
   constexpr const int BLOCK_SIZE = detail::misc::BLOCK_SIZE;
   std::array<uint8_t, BLOCK_SIZE> offsets_a;
   std::array<uint8_t, BLOCK_SIZE> offsets_b;
-  int ac = 0, bc = 0; // counts
-  int au = 0, bu = 0; // number of used
-
+  intptr_t ac = 0, bc = 0; // counts
+  intptr_t au = 0, bu = 0; // number of used
   while (2 * BLOCK_SIZE <= std::distance(a, b)) {
+    auto t = ac;
     if (ac == 0) {
       au = 0;
       for (int i = 0; i < BLOCK_SIZE;) {
@@ -159,20 +159,19 @@ inline T exchange_block(T first, T last, I index, V p) {
         offsets_a[ac] = i; ac += p <= index(a[i]); ++i;
       }
     }
-    if (bc == 0) {
+    if (t != 0 || bc == 0) {
       bu = 0;
-      for (int i = 0; i < BLOCK_SIZE;) {
-        offsets_b[bc] = i; bc += index(b[-i - 1]) < p; ++i;
-        offsets_b[bc] = i; bc += index(b[-i - 1]) < p; ++i;
-        offsets_b[bc] = i; bc += index(b[-i - 1]) < p; ++i;
-        offsets_b[bc] = i; bc += index(b[-i - 1]) < p; ++i;
+      for (int i = BLOCK_SIZE-1; 0 <= i;) {
+        offsets_b[bc] = i; bc += index(b[i - BLOCK_SIZE]) < p; --i;
+        offsets_b[bc] = i; bc += index(b[i - BLOCK_SIZE]) < p; --i;
+        offsets_b[bc] = i; bc += index(b[i - BLOCK_SIZE]) < p; --i;
+        offsets_b[bc] = i; bc += index(b[i - BLOCK_SIZE]) < p; --i;
       }
     }
 
-    int c = std::min(ac, bc);
-    for (int i = 0; i < c; ++i)
-      std::iter_swap(a + offsets_a[au + i], b - offsets_b[bu + i] - 1);
-
+    auto c = std::min(ac, bc);
+    for (intptr_t i = 0; i < c; ++i)
+      std::iter_swap(a + offsets_a[au + i], b + offsets_b[bu + i] - BLOCK_SIZE);
     ac -= c; bc -= c;
     au += c; bu += c;
     if (ac == 0) a += BLOCK_SIZE;
