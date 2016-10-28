@@ -161,52 +161,55 @@ inline T exchange_block(T first, T last, I index, V p) {
     }
     if (t != 0 || bc == 0) {
       bu = 0;
-      for (int i = BLOCK_SIZE-1; 0 <= i;) {
-        offsets_b[bc] = i; bc += index(b[i - BLOCK_SIZE]) < p; --i;
-        offsets_b[bc] = i; bc += index(b[i - BLOCK_SIZE]) < p; --i;
-        offsets_b[bc] = i; bc += index(b[i - BLOCK_SIZE]) < p; --i;
-        offsets_b[bc] = i; bc += index(b[i - BLOCK_SIZE]) < p; --i;
+      for (int i = 0; i < BLOCK_SIZE;) {
+        offsets_b[bc] = i; bc += index(b[i - BLOCK_SIZE]) < p; ++i;
+        offsets_b[bc] = i; bc += index(b[i - BLOCK_SIZE]) < p; ++i;
+        offsets_b[bc] = i; bc += index(b[i - BLOCK_SIZE]) < p; ++i;
+        offsets_b[bc] = i; bc += index(b[i - BLOCK_SIZE]) < p; ++i;
       }
     }
 
     auto c = std::min(ac, bc);
-    for (intptr_t i = 0; i < c; ++i)
+    for (decltype(c) i = 0; i < c; ++i)
       std::iter_swap(a + offsets_a[au + i], b + offsets_b[bu + i] - BLOCK_SIZE);
     ac -= c; bc -= c;
     au += c; bu += c;
     if (ac == 0) a += BLOCK_SIZE;
     if (bc == 0) b -= BLOCK_SIZE;
   }
+  auto r = std::distance(a, b);
+  decltype(r) bsa, bsb; //block size a/b
 
-  auto r = std::distance(a, b) - ((ac || bc) ? BLOCK_SIZE : 0);
-  std::remove_reference_t<decltype(r)> bsa = BLOCK_SIZE, bsb = BLOCK_SIZE; //block size a/b
-
-  if (ac == 0 && bc == 0) {
+  if ((ac | bc) == 0) {
     au = bu = 0;
-    bsa = r / 2; bsb = r - bsa;
+    bsa = r >> 1; bsb = r - bsa;
 
-    for (int i = 0; i < bsa; ++i) {
+    for (decltype(r) i = 0; i < bsa; ++i) {
       offsets_a[ac] = i; ac += p <= index(a[i]);
-      offsets_b[bc] = i; bc += index(b[-i - 1]) < p;
+      offsets_b[bc] = i; bc += index(b[i - bsb]) < p; 
     }
-    if (bsb > bsa) { // in case of odd r
-      offsets_b[bc] = static_cast<uint8_t>(bsa); bc += index(b[-bsa - 1]) < p;
+    // in case of odd r | isn't branchfree anyway
+    if (bsb > bsa) {
+      offsets_b[bc] = static_cast<uint8_t>(bsa); 
+      bc += index(b[-1]) < p;
     }
   } else if (ac == 0) {
     au = 0;
-    for (int i = 0; i < (bsa = r); ++i) {
+    bsb = BLOCK_SIZE;
+    for (decltype(r) i = 0; i < (bsa = r - BLOCK_SIZE); ++i) {
       offsets_a[ac] = i; ac += p <= index(a[i]);
     }
   } else {
     bu = 0;
-    for (int i = 0; i < (bsb = r); ++i) {
-      offsets_b[bc] = i; bc += index(b[-i - 1]) < p;
+    bsa = BLOCK_SIZE;
+    for (decltype(r) i = 0; i < (bsb = r - BLOCK_SIZE); ++i) {
+      offsets_b[bc] = i; bc += index(b[i - bsb]) < p; 
     }
   }
 
-  int c = std::min(ac, bc);
-  for (int i = 0; i < c; ++i)
-    std::iter_swap(a + offsets_a[au + i], b - offsets_b[bu + i] - 1);
+  auto c = std::min(ac, bc);
+  for (decltype(c) i = 0; i < c; ++i)
+    std::iter_swap(a + offsets_a[au + i], b + offsets_b[bu + i] - bsb);
   ac -= c; bc -= c;
   au += c; bu += c;
   if (ac == 0) a += bsa;
@@ -216,7 +219,8 @@ inline T exchange_block(T first, T last, I index, V p) {
     while (ac--) std::iter_swap(a + offsets_a[au + ac], --b);
     return b;
   } else {
-    while (bc--) std::iter_swap(a++, b - offsets_b[bu + bc] - 1);
+    for (decltype(c) i = 0; i < bc; ++i)
+      std::iter_swap(a++, b + offsets_b[bu + i] - bsb);
     return a;
   }
 }
