@@ -63,7 +63,7 @@ inline void quick(T first, T last, U Sf, U Sl, I index, C cb) {
   using typeA = std::remove_reference_t<decltype(*Sf)>;
   using typeB = std::remove_reference_t<decltype(*first)>;
   using typeC = std::remove_reference_t<decltype(index(*first))>;
-  static_assert(std::is_same<typeA, std::pair<typeB, typeC>>::value, "Type mismatch");
+  static_assert(std::is_same<typeA, detail::misc::pair<typeB, typeC>>::value, "Type mismatch");
 
   if (detail::misc::COPY_MIN <= std::distance(first, last)
       && std::distance(first, last) < std::distance(Sf, Sl)) {
@@ -77,7 +77,7 @@ inline void quick(T first, T last, U Sf, U Sl, I index, C cb) {
     // copy together
     auto a = Sf, b = Sl;
     for (auto it = first; it != last; ++it) {
-      auto v = std::make_pair(*it, index(*it));
+      auto v = detail::misc::make_pair(*it, index(*it));
       *(v.second < pivot ? a++: --b) = v;
     }
 
@@ -107,7 +107,7 @@ inline void quick(T first, T last, U Sf, U Sl, I index) {
   using typeA = std::remove_reference_t<decltype(*Sf)>;
   using typeB = std::remove_reference_t<decltype(*first)>;
   using typeC = std::remove_reference_t<decltype(index(*first))>;
-  static_assert(std::is_same<typeA, std::pair<typeB, typeC>>::value, "Type mismatch");
+  static_assert(std::is_same<typeA, detail::misc::pair<typeB, typeC>>::value, "Type mismatch");
 
   if (detail::misc::COPY_MIN / sizeof(std::pair<typeB, typeC>) <= std::distance(first, last)
    && std::distance(first, last) < std::distance(Sf, Sl)) {
@@ -120,7 +120,7 @@ inline void quick(T first, T last, U Sf, U Sl, I index) {
     // copy together
     auto a = Sf, b = Sl;
     for (auto it = first; it != last; ++it) {
-      auto v = std::make_pair(*it, index(*it));
+      auto v = detail::misc::make_pair(*it, index(*it));
       *(v.second < pivot ? a++ : --b) = v;
     }
 
