@@ -43,6 +43,7 @@
 #endif
 
 #include <algorithm>
+#include <array>
 #include <climits>
 #include <cmath>
 #include <cstdint>
@@ -64,7 +65,36 @@ constexpr const int BLOCK_SIZE    =  128;  // Block Size for block partition ~2 
 constexpr const int COPY_MIN      = 1024;  // Minimum number of elements to use copy
                                            // multiplied by the size of the pair
                                            // probably around number of cache lines in L1 cache * 2
+  
+template<bool, class T>
+struct enable { };
 
+template<class T>
+struct enable<true, T> { T _; };
+
+template<class T1, class T2>
+union pair {
+  struct {
+    T1 first; 
+    T2 second;
+  };
+private:
+  detail::misc::enable<
+    std::is_trivially_copyable<T1>::value &&
+    std::is_trivially_copyable<T2>::value, 
+    std::array<uint8_t, sizeof(first) + sizeof(second)>
+  > _;  
+  // allows to memcpy pair<T1, T2> if it's trivial
+  // rather than doing independant copies
+};
+
+template <typename, typename = void>
+struct has_xor_operator 
+    : std::false_type {};
+
+template <typename T>
+struct has_xor_operator<T, decltype(void(std::declval<T>() ^ std::declval<T>()))>
+    : std::true_type {};
 
 template <class T> int ilogb(T v) {
 #ifdef __GNUC__
@@ -76,14 +106,6 @@ template <class T> int ilogb(T v) {
   return 3 * r >> 1;
 #endif
 }
-
-template <typename, typename = void>
-struct has_xor_operator 
-    : std::false_type {};
-
-template <typename T>
-struct has_xor_operator<T, decltype(void(std::declval<T>() ^ std::declval<T>()))>
-    : std::true_type {};
 
 template <class V> inline void cswap(V &a, V &b) {
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__INTEL_COMPILER)
