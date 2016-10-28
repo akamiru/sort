@@ -53,6 +53,10 @@
 #include "inplace.h"
 
 namespace sort {
+
+// Make pair accessible from outside
+using pair = detail::misc::pair;
+	
 namespace copy {
 
 // Oportunistic version of the quicksort
