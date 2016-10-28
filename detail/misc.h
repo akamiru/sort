@@ -74,7 +74,7 @@ struct enable<true, T> { T _; };
 
 template<class T1, class T2>
 union pair {
-  constexpr pair() {};
+  constexpr pair() : first(), second() {};
   
   template<class A, class B>
   constexpr pair(A&& a, B&& b) : 
