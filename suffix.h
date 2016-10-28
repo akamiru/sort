@@ -63,7 +63,9 @@ namespace suffix {
 // expects the SA and ISA to be grouped by a single char
 // [Sf Sl) is additional space available
 #ifdef USE_COPY
-template <class T, class U, class V> void daware(T SAf, T SAl, U ISAf, V Sf, V Sl) {
+template <class T, class U, class V> void daware(T SAf, T SAl, U ISAf, V Af, V Al) {
+  auto* Sf = reinterpret_cast<detail::misc::pair<saidx_t, saidx_t>*>(&*Af);
+  auto* Sl = Sf + (Al - Af) / sizeof(decltype(*Sf)) * sizeof(decltype(*Af));
 #else
 template <class T, class U, class V> void daware(T SAf, T SAl, U ISAf) {
 #endif
