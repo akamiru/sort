@@ -74,6 +74,13 @@ struct enable<true, T> { T _; };
 
 template<class T1, class T2>
 union pair {
+  constexpr pair() {};
+  
+  template<class A, class B>
+  constexpr pair(A&& a, B&& b) : 
+     first(std::forward<A>(a)), 
+     second(std::forward<B>(b)) {}
+
   struct {
     T1 first; 
     T2 second;
@@ -84,9 +91,19 @@ private:
     std::is_trivially_copyable<T2>::value, 
     std::array<uint8_t, sizeof(first) + sizeof(second)>
   > _;  
-  // allows to memcpy pair<T1, T2> if it's trivial
+  // allows to memcpy pair<T1, T2> if they're trivial
   // rather than doing independant copies
 };
+  
+template<class T1, class T2>
+constexpr auto make_pair(T1&& a, T2&& b) -> detail::misc::pair<
+  std::remove_reference_t<T1>, 
+  std::remove_reference_t<T2>> {
+  return detail::misc::pair<
+      std::remove_reference_t<T1>, 
+      std::remove_reference_t<T1>
+    >(std::forward<T1>(a), std::forward<T2>(b));
+}
 
 template <typename, typename = void>
 struct has_xor_operator 
