@@ -101,7 +101,7 @@ constexpr auto make_pair(T1&& a, T2&& b) -> detail::misc::pair<
   std::remove_reference_t<T2>> {
   return detail::misc::pair<
       std::remove_reference_t<T1>, 
-      std::remove_reference_t<T1>
+      std::remove_reference_t<T2>
     >(std::forward<T1>(a), std::forward<T2>(b));
 }
 
