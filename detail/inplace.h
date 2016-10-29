@@ -153,19 +153,21 @@ inline T exchange_block(T first, T last, I index, V p) {
     if (ac == 0) {
       au = 0;
       for (int i = 0; i < BLOCK_SIZE;) {
-        offsets_a[ac] = i; ac += p <= index(a[i]); ++i;
-        offsets_a[ac] = i; ac += p <= index(a[i]); ++i;
-        offsets_a[ac] = i; ac += p <= index(a[i]); ++i;
-        offsets_a[ac] = i; ac += p <= index(a[i]); ++i;
+        offsets_a[ac] = i + 0; ac += p <= index(a[i + 0]);
+        offsets_a[ac] = i + 1; ac += p <= index(a[i + 1]);
+        offsets_a[ac] = i + 2; ac += p <= index(a[i + 2]);
+        offsets_a[ac] = i + 3; ac += p <= index(a[i + 3]);
+        i += 4;
       }
     }
     if (t != 0 || bc == 0) {
       bu = 0;
       for (int i = 0; i < BLOCK_SIZE;) {
-        offsets_b[bc] = i; bc += index(b[i - BLOCK_SIZE]) < p; ++i;
-        offsets_b[bc] = i; bc += index(b[i - BLOCK_SIZE]) < p; ++i;
-        offsets_b[bc] = i; bc += index(b[i - BLOCK_SIZE]) < p; ++i;
-        offsets_b[bc] = i; bc += index(b[i - BLOCK_SIZE]) < p; ++i;
+        offsets_b[bc] = i + 0; bc += index(b[i + 0 - BLOCK_SIZE]) < p;
+        offsets_b[bc] = i + 1; bc += index(b[i + 1 - BLOCK_SIZE]) < p;
+        offsets_b[bc] = i + 2; bc += index(b[i + 2 - BLOCK_SIZE]) < p;
+        offsets_b[bc] = i + 3; bc += index(b[i + 3 - BLOCK_SIZE]) < p;
+        i += 4;
       }
     }
 
