@@ -44,7 +44,7 @@ namespace detail {
 namespace inplace {
 
 template <class T, class I, class V>
-inline std::pair<T, T> partition(T first, T last, I index, V pa) {
+static std::pair<T, T> partition(T first, T last, I index, V pa) {
   using W = std::remove_reference_t<decltype(*first)>;
   // Doesn't assume that pa is in [first, last)
   // see "Engineering a Sort Function" - BENTLEY, McILROY
@@ -52,18 +52,23 @@ inline std::pair<T, T> partition(T first, T last, I index, V pa) {
   auto a = first, c = std::prev(last);
   auto b = first, d = last;
 
-  while (true) {
-    W bv, cv;
-    for (V v; b <= c && (v = index(bv = *b)) <= pa; ++b)
+  W bv, cv;
+  for (V v; b <= c && (v = index(bv = *b)) <= pa; ++b)
+    if (v == pa) *b = *a, *a++ = bv;
+
+  for (V v; b < c && pa <= (v = index(cv = *c)); --c)
+    if (v == pa) *c = *--d, *d = cv;
+
+  // we now have a final guard on both ends
+  if (b < c) do {
+    *c-- = bv, *b++ = cv;
+
+    for (V v; (v = index(bv = *b)) <= pa; ++b)
       if (v == pa) *b = *a, *a++ = bv;
 
-    for (V v; b <= c && pa <= (v = index(cv = *c)); --c)
+    for (V v; pa <= (v = index(cv = *c)); --c)
       if (v == pa) *c = *--d, *d = cv;
-
-    if (b > c) break;
-
-    *c-- = bv; *b++ = cv;
-  }
+  } while (b <= c);
 
   auto s = std::min(first + (b - a), a);
   std::swap_ranges(first, s, b - (s - first));
@@ -75,7 +80,7 @@ inline std::pair<T, T> partition(T first, T last, I index, V pa) {
 }
 
 template <class T, class I, class V>
-inline std::pair<T, T> exchange1(T a, T f, I index, V pa) {
+static std::pair<T, T> exchange1(T a, T f, I index, V pa) {
   using W = std::remove_reference_t<decltype(*a)>;
   // Assumes pa to be at least the median of 3 elements in [a, f)
   // see "Engineering a Sort Function" - BENTLEY, McILROY
@@ -109,7 +114,7 @@ inline std::pair<T, T> exchange1(T a, T f, I index, V pa) {
 }
 
 template <class T, class I, class V>
-inline std::tuple<T, T, T> exchange3(T first, T last, I index, V pa, V pb, V pc) {
+static std::tuple<T, T, T> exchange3(T first, T last, I index, V pa, V pb, V pc) {
   using W = std::remove_reference_t<decltype(*first)>;
   // Assumes pa < pb < pc and all exists within [first, last)
   // see "How Good is Multi-Pivot Quicksort?" - Aumueller, Dietzfelbinger, Klaue
@@ -136,7 +141,7 @@ inline std::tuple<T, T, T> exchange3(T first, T last, I index, V pa, V pb, V pc)
 }
 
 template <class T, class I, class V>
-inline T exchange_block(T first, T last, I index, V p) {
+static T exchange_block(T first, T last, I index, V p) {
   //using W = std::remove_reference_t<decltype(*first)>;
   // Assumes p is at least median of three and exists within [first, last)
   // see "BlockQuicksort: How Branch Mispredictions don't affect Quicksort" - Edelkamp, Weiss
@@ -152,7 +157,7 @@ inline T exchange_block(T first, T last, I index, V p) {
     auto t = ac;
     if (ac == 0) {
       au = 0;
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__INTEL_COMPILER)
       for (intptr_t i = 0; i < BLOCK_SIZE;) {
         offsets_a[ac] = i + 0; ac += p <= index(a[i + 0]);
         offsets_a[ac] = i + 1; ac += p <= index(a[i + 1]);
@@ -172,7 +177,7 @@ inline T exchange_block(T first, T last, I index, V p) {
     }
     if (t != 0 || bc == 0) {
       bu = 0;
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__INTEL_COMPILER)
       for (intptr_t i = 0; i < BLOCK_SIZE;) {
         offsets_b[bc] = i + 0; bc += index(b[i + 0 - BLOCK_SIZE]) < p;
         offsets_b[bc] = i + 1; bc += index(b[i + 1 - BLOCK_SIZE]) < p;
@@ -248,7 +253,7 @@ inline T exchange_block(T first, T last, I index, V p) {
 }
 
 template<class V, class T, class I>
-inline std::tuple<V, V, V> pivot(T first, T last, I index) {
+static std::tuple<V, V, V> pivot(T first, T last, I index) {
   V a, b, c;
   if (std::distance(first, last) < detail::misc::MEDIAN21) {
     // Get 3 pivots using median of 7
@@ -284,7 +289,7 @@ inline std::tuple<V, V, V> pivot(T first, T last, I index) {
 template <int LR, class T, class I, class C>
 inline void insertion(T first, T last, I index, C cb) {
   // Insertion sort
-  for (auto i = first + 1, j = i; i < last; ++i) {
+  if (first != last) for (auto i = first + 1, j = i; i < last; ++i) {
     auto tmp = *i;
     auto val = index(tmp);
     for (j = i; j > first && val < index(j[-1]); --j)
