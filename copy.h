@@ -18,23 +18,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-// Linear Time Suffix Sorting By Depth Awareness
-
-// Notes from the author:
-//   This is a reference implementation currently NOT running in O(n)
-//     It uses multi pivot introsort rather than a linear time sorting stage
-//   I would be happy if you file a pull request at github when you change
-//   something
-//     so we can improve the software for everyone. Of course it's your right
-//     not to do so.
-//     If you have questions on this feel free to report an issue.
-//     http://github.com/akamiru
-//   Infos on the algorithm are mainly found in sort::suffix::daware()
-//     currently found around line 230.
-//   I'd really like to thank all authors who make their papers available online
-//     many related papers are cited in the description most of which can be
-//     found on the internet.
-
 #ifndef SORT_COPY_H
 #define SORT_COPY_H
 
@@ -55,7 +38,8 @@
 namespace sort {
 
 // Make pair accessible from outside
-using pair = detail::misc::pair;
+template<class T1, class T2>
+using pair = detail::misc::pair<T1, T2>;
 
 namespace copy {
 
@@ -67,7 +51,7 @@ inline void quick(T first, T last, U Sf, U Sl, I index, C cb) {
   using typeA = std::remove_reference_t<decltype(*Sf)>;
   using typeB = std::remove_reference_t<decltype(*first)>;
   using typeC = std::remove_reference_t<decltype(index(*first))>;
-  static_assert(std::is_same<typeA, detail::misc::pair<typeB, typeC>>::value, "Type mismatch");
+  static_assert(std::is_same<typeA, detail::misc::pair<typeC, typeB>>::value, "Type mismatch");
 
   if (detail::misc::COPY_MIN <= std::distance(first, last)
       && std::distance(first, last) < std::distance(Sf, Sl)) {
@@ -78,18 +62,18 @@ inline void quick(T first, T last, U Sf, U Sl, I index, C cb) {
     std::tie(pivot, equals) = detail::misc::median7_copy<typeC>(first, index);
     if (equals > 5) return sort::inplace::quick<LR>(first, last, index, cb);
 
-    // copy together
+    // copy together + initial partitioning
     auto a = Sf, b = Sl;
     for (auto it = first; it != last; ++it) {
-      auto v = detail::misc::make_pair(*it, index(*it));
-      *(v.second < pivot ? a++: --b) = v;
+      auto v = detail::misc::make_pair(index(*it), *it);
+      *(v.first < pivot ? a++ : --b) = v;
     }
 
-    auto idx = [](auto a) { return a.second; };
+    auto idx = [](auto a) { return a.first; };
     auto icb = [first, Sf, cb](auto a, auto b) {
       // copy back
       for (auto it = a; it != b; ++it)
-        first[it - Sf] = it->first;
+        first[it - Sf] = it->second;
 
       // call the cb
       cb(first + (a - Sf), first + (b - Sf));
@@ -111,24 +95,24 @@ inline void quick(T first, T last, U Sf, U Sl, I index) {
   using typeA = std::remove_reference_t<decltype(*Sf)>;
   using typeB = std::remove_reference_t<decltype(*first)>;
   using typeC = std::remove_reference_t<decltype(index(*first))>;
-  static_assert(std::is_same<typeA, detail::misc::pair<typeB, typeC>>::value, "Type mismatch");
+  static_assert(std::is_same<typeA, detail::misc::pair<typeC, typeB>>::value, "Type mismatch");
 
-  if (detail::misc::COPY_MIN / sizeof(std::pair<typeB, typeC>) <= std::distance(first, last)
-   && std::distance(first, last) < std::distance(Sf, Sl)) {
+  if (detail::misc::COPY_MIN <= std::distance(first, last)
+      && std::distance(first, last) < std::distance(Sf, Sl)) {
     Sl = Sf + std::distance(first, last);
 
     // get a pivot
     typeC pivot;
     std::tie(std::ignore, pivot, std::ignore) = detail::misc::median7<typeC>(first, index);
 
-    // copy together
+    // copy together + initial partition
     auto a = Sf, b = Sl;
     for (auto it = first; it != last; ++it) {
-      auto v = detail::misc::make_pair(*it, index(*it));
-      *(v.second < pivot ? a++ : --b) = v;
+      auto v = detail::misc::make_pair(index(*it), *it);
+      *(v.first < pivot ? a++ : --b) = v;
     }
 
-    auto idx = [](auto a) { return a.second; };
+    auto idx = [](auto a) { return a.first; };
 
     if (LR) {
       sort::inplace::block<LR>(Sf, a, idx);
@@ -139,12 +123,12 @@ inline void quick(T first, T last, U Sf, U Sl, I index) {
     }
 
     for (auto it = Sf; it != Sl; ++it)
-      first[std::distance(Sf, it)] = it->first;
+      first[std::distance(Sf, it)] = it->second;
   } else  // not enough space
     sort::inplace::quick<LR>(first, last, index);
 }
 
-} // copy
-} // sort
+}  // copy
+}  // sort
 
 #endif  // SORT_COPY_H

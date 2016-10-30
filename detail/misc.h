@@ -18,23 +18,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-// Linear Time Suffix Sorting By Depth Awareness
-
-// Notes from the author:
-//   This is a reference implementation currently NOT running in O(n)
-//     It uses multi pivot introsort rather than a linear time sorting stage
-//   I would be happy if you file a pull request at github when you change
-//   something
-//     so we can improve the software for everyone. Of course it's your right
-//     not to do so.
-//     If you have questions on this feel free to report an issue.
-//     http://github.com/akamiru
-//   Infos on the algorithm are mainly found in sort::suffix::daware()
-//     currently found around line 230.
-//   I'd really like to thank all authors who make their papers available online
-//     many related papers are cited in the description most of which can be
-//     found on the internet.
-
 #ifndef SORT_DETAIL_MISC_H
 #define SORT_DETAIL_MISC_H
 
@@ -54,20 +37,19 @@ namespace sort {
 namespace detail {
 namespace misc {
 
-constexpr const int NOCB          =    2;  // Don't use the callback on equal ranges (implies LR)
-constexpr const int LR            =    1;  // Direction: left to right
-constexpr const int RL            =    0;  // Direction: right to left
+constexpr const int NOCB = 2;  // Don't use the callback on equal ranges (implies LR)
+constexpr const int LR   = 1;  // Direction: left to right
+constexpr const int RL   = 0;  // Direction: right to left
 
 constexpr const int INSERTION_MAX =   32;  // When to switch to insertion sort
 constexpr const int MEDIAN21      =   64;  // When to switch to pseudo median of 21
 constexpr const int MEDIAN65      = 8192;  // When to switch to pseudo median of 65
 constexpr const int BLOCK_SIZE    =  128;  // Block Size for block partition ~2 cache lines
 constexpr const int COPY_MIN      = 1024;  // Minimum number of elements to use copy
-                                           // multiplied by the size of the pair
                                            // probably around number of cache lines in L1 cache * 2
-  
+
 template<bool, class T>
-struct enable { };
+struct enable {};
 
 template<class T>
 struct enable<true, T> { T _; };
@@ -75,57 +57,57 @@ struct enable<true, T> { T _; };
 template<class T1, class T2>
 union pair {
   constexpr pair() : first(), second() {};
-  
+
   template<class A, class B>
-  constexpr pair(A&& a, B&& b) : 
-     first(std::forward<A>(a)), 
-     second(std::forward<B>(b)) {}
+  constexpr pair(A&& a, B&& b) :
+    first(std::forward<A>(a)),
+    second(std::forward<B>(b)) {}
 
   struct {
-    T1 first; 
+    T1 first;
     T2 second;
   };
 private:
   detail::misc::enable<
     std::is_trivially_copyable<T1>::value &&
-    std::is_trivially_copyable<T2>::value, 
-    std::array<uint8_t, sizeof(first) + sizeof(second)>
-  > _;  
+    std::is_trivially_copyable<T2>::value,
+    std::array<uint8_t, sizeof(T1) + sizeof(T2)>
+  > _;
   // allows to memcpy pair<T1, T2> if they're trivial
   // rather than doing independant copies
 };
-  
+
 template<class T1, class T2>
-constexpr auto make_pair(T1&& a, T2&& b) -> detail::misc::pair<
-  std::remove_reference_t<T1>, 
+constexpr auto make_pair(T1&& a, T2&& b)->detail::misc::pair<
+  std::remove_reference_t<T1>,
   std::remove_reference_t<T2>> {
   return detail::misc::pair<
-      std::remove_reference_t<T1>, 
-      std::remove_reference_t<T2>
-    >(std::forward<T1>(a), std::forward<T2>(b));
+    std::remove_reference_t<T1>,
+    std::remove_reference_t<T2>
+  >(std::forward<T1>(a), std::forward<T2>(b));
 }
 
 template <typename, typename = void>
-struct has_xor_operator 
-    : std::false_type {};
+struct has_xor_operator
+  : std::false_type {};
 
 template <typename T>
 struct has_xor_operator<T, decltype(void(std::declval<T>() ^ std::declval<T>()))>
-    : std::true_type {};
+  : std::true_type {};
 
 template <class T> int ilogb(T v) {
-#ifdef __GNUC__
-  return 3 * (31 - __builtin_clz(v)) >> 1;
+#if defined(__GNUC__)
+  return (31 - __builtin_clz(v));
 #else
   int r = 0;
   while (v >>= 1)
     ++r;
-  return 3 * r >> 1;
+  return r;
 #endif
 }
 
 template <class V> inline void cswap(V &a, V &b) {
-#if defined(__GNUC__) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+#if defined(__GNUC__) || defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
   if (has_xor_operator<V>::value) {
     std::remove_reference_t<V> da = a, db = b, tmp;
     tmp = a = da < db ? da : db;
@@ -226,18 +208,18 @@ template <class V, class T, class I>
 static std::tuple<V, V, V> median15(T first, I index) {
   // Get 3 pivots by sorting 15 elements and returning element 4, 8 and 12
 
-  V a = index(first[ 0]);
-  V b = index(first[ 1]);
-  V c = index(first[ 2]);
-  V d = index(first[ 3]);
+  V a = index(first[0]);
+  V b = index(first[1]);
+  V c = index(first[2]);
+  V d = index(first[3]);
   cswap(a, b); cswap(c, d);
-  V e = index(first[ 4]);
-  V f = index(first[ 5]);
-  V g = index(first[ 6]);
-  V h = index(first[ 7]);
+  V e = index(first[4]);
+  V f = index(first[5]);
+  V g = index(first[6]);
+  V h = index(first[7]);
   cswap(e, f); cswap(g, h);
-  V i = index(first[ 8]);
-  V j = index(first[ 9]);
+  V i = index(first[8]);
+  V j = index(first[9]);
   V k = index(first[10]);
   V l = index(first[11]);
   cswap(i, j); cswap(k, l);
@@ -311,6 +293,6 @@ auto castTo() {
 
 }  // misc
 }  // detail
-} // sort
+}  // sort
 
 #endif  // SORT_DETAIL_MISC_H

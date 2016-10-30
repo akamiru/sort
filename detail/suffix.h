@@ -20,20 +20,6 @@
 
 // Linear Time Suffix Sorting By Depth Awareness
 
-// Notes from the author:
-//   This is a reference implementation currently NOT running in O(n)
-//     It uses multi pivot introsort rather than a linear time sorting stage
-//   I would be happy if you file a pull request on github when you change
-//   something so we can improve the software for everyone. Of course it's 
-//   your right not to do so.
-//     If you have questions on this feel free to report an issue.
-//     http://github.com/akamiru
-//   Infos on the algorithm are mainly found in sort::suffix::daware()
-//     currently found around line 215.
-//   I'd really like to thank all authors who make their papers available online
-//     many related papers are cited in the description most of which can be
-//     found on the internet.
-
 #ifndef SORT_DETAIL_SUFFIX_H
 #define SORT_DETAIL_SUFFIX_H
 
@@ -165,7 +151,7 @@ inline auto name(T SA, U ISA, D depth) {
       // the fact that we will never sort this pair again.
       // That this works strongly indicates O(n) time for radix sort implementation
       // because it shows that every pair is sorted at max once and there are
-      // only O(n) pairs.The only problem arises with tandem repeats which need to 
+      // only O(n) pairs.The only problem arises with tandem repeats which need to
       // be sorted using induction
       ISA[c + 0] = +cgroup;
       ISA[c + 1] = -ndepth;
@@ -176,8 +162,8 @@ inline auto name(T SA, U ISA, D depth) {
   };
 }
 
-} // suffix
-} // detail
-} // sort
+}  // suffix
+}  // detail
+}  // sort
 
 #endif  // SORT_DETAIL_SUFFIX_H
