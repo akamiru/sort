@@ -19,7 +19,7 @@
 // IN THE SOFTWARE.
 
 // Three Pivot Quicksort
-//  a three pivot quicksort implementation switching to three way 
+//  a three pivot quicksort implementation switching to three way
 //  partitioning if usefull
 
 #ifndef SORT_INPLACE_H
@@ -44,18 +44,19 @@ namespace inplace {
 
 // Fast general purpose multi pivot introsort
 // with index function and optimal callback on each equal ranges.
-// If you don't need an index function or a callback you should probably use
-// pdqsort.
-// Anyway this implementation should already be faster than std::sort for random
-// data
-// and especially for highly repetitive data but lacks the worst case guarantee
+// One of these implementation should already be faster than std::sort
+// and especially for highly repetitive data
+
+// If branch misses slow down your sort use block()
+// In any other case (slow index function) use quick()
+// as it reduces the number of index() calls
 
 // Average runtime is O(n * log(m))
 // Worst case is O(n * log(n))
 // where m is the number of destinct values
 template <int LR = detail::misc::LR, class T, class I, class C>
 inline void quick(T first, T last, I index, C cb) {
-  int budget = detail::misc::ilogb(last - first + 1);
+  int budget =  3 * detail::misc::ilogb(last - first + 1) >> 1;
   detail::inplace::quick<LR, 0>(first, last, index, cb, budget);
 }
 
@@ -63,10 +64,10 @@ template <int LR = detail::misc::LR, class T, class I>
 inline void quick(T first, T last, I index) {
   int budget = detail::misc::ilogb(last - first + 1);
   detail::inplace::quick<LR, 0>(first, last, index, [](auto a, auto b) {
-    (void)a; (void)b;
+    (void) a; (void) b;
   }, budget);
 }
-  
+
 template <int LR = detail::misc::LR, class T, class I, class C>
 inline void block(T first, T last, I index, C cb) {
   int budget = 2 * detail::misc::ilogb(last - first + 1);
@@ -77,11 +78,11 @@ template <int LR = detail::misc::LR, class T, class I>
 inline void block(T first, T last, I index) {
   int budget = 2 * detail::misc::ilogb(last - first + 1);
   detail::inplace::quick<LR, 1>(first, last, index, [](auto a, auto b) {
-    (void)a; (void)b;
+    (void) a; (void) b;
   }, budget);
 }
 
-} // inplace
-} // sort
+}  // inplace
+}  // sort
 
 #endif  // SORT_INPLACE_H
