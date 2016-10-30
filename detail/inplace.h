@@ -56,11 +56,11 @@ static std::pair<T, T> partition(T first, T last, I index, V pa) {
   for (V v; b <= c && (v = index(bv = *b)) <= pa; ++b)
     if (v == pa) *b = *a, *a++ = bv;
 
-  for (V v; b <= c && pa <= (v = index(cv = *c)); --c)
+  for (V v; b < c && pa <= (v = index(cv = *c)); --c)
     if (v == pa) *c = *--d, *d = cv;
 
   // we now have a final guard on both ends
-  if (b <= c) do {
+  if (b < c) do {
     *c-- = bv, *b++ = cv;
 
     for (V v; (v = index(bv = *b)) <= pa; ++b)
@@ -289,7 +289,7 @@ static std::tuple<V, V, V> pivot(T first, T last, I index) {
 template <int LR, class T, class I, class C>
 inline void insertion(T first, T last, I index, C cb) {
   // Insertion sort
-  for (auto i = first + 1, j = i; i < last; ++i) {
+  if (first != last) for (auto i = first + 1, j = i; i < last; ++i) {
     auto tmp = *i;
     auto val = index(tmp);
     for (j = i; j > first && val < index(j[-1]); --j)
