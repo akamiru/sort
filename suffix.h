@@ -162,7 +162,6 @@ template <class T, class U, class V> void daware(T SAf, T SAl, U ISAf) {
       // handle only the type S subgroups
       for (T sgf = gc, sgl = gl; gc < sgl;) {
         if (sgl[-1] < 0) {  // is type F?
-          while (sgl[-2] < 0) --sgl;  // scan over unique groups
           sgl = SAf + ISAf[~sgl[-1]];  // skip over
         } else {  // type S
           sgf = SAf + ISAf[+sgl[-1]];  // get the start of the group
