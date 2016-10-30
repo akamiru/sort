@@ -24,12 +24,10 @@
 //   This is a reference implementation currently NOT running in O(n)
 //     It uses multi pivot introsort rather than a linear time sorting stage
 //   I would be happy if you file a pull request on github when you change
-//   something so we can improve the software for everyone. Of course it's 
+//   something so we can improve the software for everyone. Of course it's
 //   your right not to do so.
 //     If you have questions on this feel free to report an issue.
 //     http://github.com/akamiru
-//   Infos on the algorithm are mainly found in sort::suffix::daware()
-//     currently found around line 215.
 //   I'd really like to thank all authors who make their papers available online
 //     many related papers are cited in the description most of which can be
 //     found on the internet.
@@ -54,7 +52,9 @@
 #include "copy.h"
 
 // define if additional space may be used
+#ifndef NO_USE_COPY
 #define USE_COPY
+#endif
 
 namespace sort {
 namespace suffix {
@@ -64,7 +64,9 @@ namespace suffix {
 // [Sf Sl) is additional space available
 #ifdef USE_COPY
 template <class T, class U, class V> void daware(T SAf, T SAl, U ISAf, V Af, V Al) {
-  auto* Sf = reinterpret_cast<detail::misc::pair<saidx_t, saidx_t>*>(&*Af);
+  using X = std::remove_reference_t<decltype(*ISAf)>;
+  using Y = std::remove_reference_t<decltype(*SAf)>;
+  auto* Sf = reinterpret_cast<detail::misc::pair<X, Y>*>(&*Af);
   auto* Sl = Sf + (Al - Af) / sizeof(decltype(*Sf)) * sizeof(decltype(*Af));
 #else
 template <class T, class U, class V> void daware(T SAf, T SAl, U ISAf) {
@@ -159,19 +161,18 @@ template <class T, class U, class V> void daware(T SAf, T SAl, U ISAf) {
 
       // handle only the type S subgroups
       for (T sgf = gc, sgl = gl; gc < sgl;) {
-        if (sgl[-1] < 0) { // is type F?
-          sgl = SAf + ISAf[~sgl[-1]]; // skip over
+        if (sgl[-1] < 0) {  // is type F?
+          sgl = SAf + ISAf[~sgl[-1]];  // skip over
         } else {  // type S
-          // get the start of the group
-          sgf = SAf + ISAf[+sgl[-1]];
+          sgf = SAf + ISAf[+sgl[-1]];  // get the start of the group
 
           if (std::distance(sgf, sgl) < 2) {
-            *--sgl = ~*sgf; // we can directly skip over it
+            *--sgl = ~*sgf;  // we can directly skip over it
             continue;
           }
 
           // calculate the sorting depth
-          auto n = ISAf[sgl[-1] + 1]; // Get the element following the current
+          auto n = ISAf[sgl[-1] + 1];  // Get the element following the current
           auto depth = 1 + ((n >> (sizeof(decltype(n)) * CHAR_BIT - 1)) & ~n);
 
           // get the index function
@@ -187,7 +188,7 @@ template <class T, class U, class V> void daware(T SAf, T SAl, U ISAf) {
         }
       }
     } else
-      *gf = ~*gf; // Group is unique - just flag it as type F
+      *gf = ~*gf;  // Group is unique - just flag it as type F
     gl = gf;
   }
 
@@ -197,7 +198,7 @@ template <class T, class U, class V> void daware(T SAf, T SAl, U ISAf) {
     while (0 <= *gl++);  // End of the group is flagged
     gl[-1] = ~gl[-1];    // Flip the flag
 
-    auto n = ISAf[*gf + 1]; // Get the element following the current
+    auto n = ISAf[*gf + 1];  // Get the element following the current
     auto depth = 1 + ((n >> (sizeof(decltype(n)) * CHAR_BIT - 1)) & ~n);
     auto index = detail::misc::index(ISAf, depth);
 
@@ -225,7 +226,7 @@ template <class T, class U, class V> void daware(T SAf, T SAl, U ISAf) {
   // Now the SA is completly sorted and ISA is completly reconstructed
 }
 
-} // suffix
-} // sort
+}  // suffix
+}  // sort
 
 #endif  // SORT_SUFFIX_H
