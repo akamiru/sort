@@ -23,7 +23,7 @@ Daware is now able to use additional memory to speed up the sorting and is recur
 | test1         |      2097152 |   **0.04073** |       0.06961 |       1.70914 |
 | test2         |      2097152 |   **0.03523** |       0.03874 |       1.09972 |
 | test3         |      2097088 |   **0.02155** |       0.04045 |       1.87681 |
-| sum           |           -1 |   **1.49774** |       3.41574 |       2.28059 |
+| sum           |     67023574 |   **1.49774** |       3.41574 |       2.28059 |
 
 ####benchmark results for enwik8 and enwik9 from the LTCB (times include ONLY the trsort/daware calls):
 
