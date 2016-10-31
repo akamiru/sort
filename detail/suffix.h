@@ -53,28 +53,12 @@ inline T induce(T SA, U ISA, T a, T b, T e, T f, D depth, G group) {
     return b;
   }
 
-  auto index = detail::misc::index(ISA, depth);
   // [a, b) = lower range          = group
   // [b, e) = range to be induced  = group
   // [e, f) = high range           > group
   T c = b, d = e;
-
+  auto index = detail::misc::index(ISA, depth);
   auto castToIndex = detail::misc::castTo<decltype(*ISA)>();
-
-  // Use partition if it is less work
-  constexpr const int s = sizeof(decltype(*a));  // this saves 3 shifts
-  while (b != e && (e - b) * 4 * s < ((b - a) + (f - e)) * s) {
-    auto cgroup = castToIndex(b - SA);
-    std::for_each(b, e, [ISA, cgroup](auto a) { ISA[a] = cgroup; });
-    std::tie(c, d) = detail::inplace::partition(b, e, index, cgroup);
-    group = cgroup;
-    std::for_each(d, e, [ISA, cgroup = castToIndex(d - SA)](auto a) { ISA[a] = cgroup; });
-
-    // Flag end of lower part if there is one
-    if (a != b) b[-1] = ~b[-1];
-    // Iterate into the center
-    a = b; b = c; f = e; e = d;
-  }
 
   // Induce upper part
   while (e != f) {
@@ -84,20 +68,24 @@ inline T induce(T SA, U ISA, T a, T b, T e, T f, D depth, G group) {
       if (depth <= v && ISA[v = (v - depth)] == group)
         *--d = v; // put it into the bucket
     }
-    // name (needs a second pass to know the beginning)
-    std::for_each(d, e, [ISA, cgroup = castToIndex(d - SA)](auto a) { ISA[a] = cgroup; });
+    // update the beginning of the group
+    if (d != e) ISA[e[-1]] = castToIndex(d - SA);
     // Iterate into the left part
     f = e; e = d;
   }
 
   // Induce lower part
+  auto ndepth = depth;
   while (b != d) {
+    ndepth += depth;
     auto cgroup = castToIndex(b - SA);
     for (auto it = a; it != b; ++it) {
       auto v = *it;
       // If the prev element is in the group
-      if (depth <= v && ISA[v = (v - depth)] == group)
-        ISA[*c++ = v] = cgroup;  // While naming can be skipped we do not benefit
+      if (depth <= v && ISA[v = (v - depth)] == group) {
+        ISA[*c++ = v] = cgroup;
+        ISA[v + 1]    = -ndepth;
+      }
     }
     // Flag end of lower part to mark it type F
     b[-1] = ~b[-1];
@@ -122,9 +110,9 @@ static T partition(T SA, U ISA, T first, T last, D depth) {
   static_assert(!std::is_reference<T>::value, "T is a reference");
   std::tie(a, b) = detail::inplace::partition(first, last, index, first - SA);
 
-  // name the type S group
+  // update the beginning of the group
   auto castToIndex = detail::misc::castTo<decltype(*ISA)>();
-  std::for_each(b, last, [ISA, cgroup = castToIndex(b - SA)](auto c) { ISA[c] = cgroup; });
+  if (b != last) ISA[last[-1]] = castToIndex(b - SA);
 
   // Induce sort the tandem repeats part (= equal partition) into type L and S
   return detail::suffix::induce(SA, ISA, first, a, b, last, depth, first - SA);

@@ -60,7 +60,8 @@ inline void quick(T first, T last, U Sf, U Sl, I index, C cb) {
     // get a pivot
     typeC pivot; int equals;
     std::tie(pivot, equals) = detail::misc::median7_copy<typeC>(first, index);
-    if (equals > 5) return sort::inplace::quick<LR>(first, last, index, cb);
+    if (std::distance(first, last) * (6 - equals) < detail::misc::COPY_MIN * 7)
+      return sort::inplace::quick<LR>(first, last, index, cb);
 
     // copy together + initial partitioning
     auto a = Sf, b = Sl;
@@ -102,8 +103,7 @@ inline void quick(T first, T last, U Sf, U Sl, I index) {
     Sl = Sf + std::distance(first, last);
 
     // get a pivot
-    typeC pivot;
-    std::tie(std::ignore, pivot, std::ignore) = detail::misc::median7<typeC>(first, index);
+    typeC pivot = index(*first);
 
     // copy together + initial partition
     auto a = Sf, b = Sl;
@@ -116,14 +116,20 @@ inline void quick(T first, T last, U Sf, U Sl, I index) {
 
     if (LR) {
       sort::inplace::block<LR>(Sf, a, idx);
+      for (auto it = Sf; it != a; ++it)
+        first[std::distance(Sf, it)] = it->second;
       sort::inplace::block<LR>(a, Sl, idx);
+      for (auto it = a; it != Sl; ++it)
+        first[std::distance(Sf, it)] = it->second;
     } else {
       sort::inplace::block<LR>(a, Sl, idx);
+      for (auto it = a; it != Sl; ++it)
+        first[std::distance(Sf, it)] = it->second;
       sort::inplace::block<LR>(Sf, a, idx);
+      for (auto it = Sf; it != a; ++it)
+        first[std::distance(Sf, it)] = it->second;
     }
 
-    for (auto it = Sf; it != Sl; ++it)
-      first[std::distance(Sf, it)] = it->second;
   } else  // not enough space
     sort::inplace::quick<LR>(first, last, index);
 }
