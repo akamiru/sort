@@ -48,14 +48,8 @@ constexpr const int BLOCK_SIZE    =  128;  // Block Size for block partition ~2 
 constexpr const int COPY_MIN      = 1024;  // Minimum number of elements to use copy
                                            // probably around number of cache lines in L1 cache * 2
 
-template<bool, class T>
-struct enable {};
-
-template<class T>
-struct enable<true, T> { T _; };
-
 template<class T1, class T2>
-union pair {
+struct pair {
   constexpr pair() : first(), second() {};
 
   template<class A, class B>
@@ -63,19 +57,21 @@ union pair {
     first(std::forward<A>(a)),
     second(std::forward<B>(b)) {}
 
-  struct {
-    T1 first;
-    T2 second;
-  };
-private:
-  detail::misc::enable<
-    std::is_trivially_copyable<T1>::value &&
-    std::is_trivially_copyable<T2>::value,
-    std::array<uint8_t, sizeof(T1) + sizeof(T2)>
-  > _;
-  // allows to memcpy pair<T1, T2> if they're trivial
-  // rather than doing independant copies
+  pair& operator^=(const pair& rhs) {
+    this->first ^= rhs.first;
+    this->second ^= rhs.second;
+    return *this;
+  }
+
+  T1 first;
+  T2 second;
 };
+
+template<class T1, class T2>
+inline pair<T1, T2> operator^(pair<T1, T2> lhs, const pair<T1, T2>& rhs) {
+  lhs ^= rhs;
+  return lhs;
+}
 
 template<class T1, class T2>
 constexpr auto make_pair(T1&& a, T2&& b)->detail::misc::pair<
