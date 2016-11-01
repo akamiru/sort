@@ -110,20 +110,17 @@ template <class T, class U, class V> void daware(T SAf, T SAl, U ISAf) {
   // for multi pivot quicksort. But without it the reduced branch mispredictions
   // probably won't make up for the additional cache misses when not using three
   // pivot quicksort.
-  // We could check by replacing insertion sort with "Pattern-defeating quicksort" - Peters
-  // and setting the insertion sort limit to INT_MAX
-  // https://github.com/orlp/pdqsort
-  // Tests show a slow down of ~2 due to the amount of cache misses
+  // We use this when values are fast to access.
 
   // "The Spreadsort High-performance General-case Sorting Algorithm" - Ross
   // Spreadsort might improve performance over pure quicksort
-  // at least runtime garantee improves somewhat
+  // at least runtime garantee improves somewhat.
 
   // "Improving multikey Quicksort for sorting strings with many equal elements" - Kim, Park
   // Split-end partitioning for the three way quicksort might not be optimal
   // because it is only used when we have a big amount of elements equal to
   // the pivot which results in a lot of copying. "collect-center" might be
-  // faster. But sadly again I have no access to this paper.
+  // faster. Tests showed that collect-center is slower.
 
   // We might be able to further reduce the cache misses if we could
   // classify the ISA values to S/L type while building the SA in the
@@ -132,7 +129,8 @@ template <class T, class U, class V> void daware(T SAf, T SAl, U ISAf) {
   // Using sorting networks instead of insertion sort for small lists
   // might increase performance by reducing the number of comparisons.
   // Maybe compile time construction of Batcher's Odd-Even Mergesort
-  // to keep the code clean.
+  // to keep the code clean. 
+  // Hard to add branchless therefore pretty slow.
 
   // Prefetching ISA when sorting
   // This should be tested on real data with valgrind - first tests are pretty
@@ -143,6 +141,7 @@ template <class T, class U, class V> void daware(T SAf, T SAl, U ISAf) {
   // then copy back the results. That should reduce the number of cache misses
   // to near linear (quicksort itself has O(n * log(n)) cache misses with a very
   // small const factor)
+  // This greatly improved the scaling of daware.
 
   // Actual implementation:
   // Start by iterating over all groups right to left
