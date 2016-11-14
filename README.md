@@ -2,7 +2,7 @@
 three-pivot quicksort + novel linear time suffix array construction algorithm by depth awareness
 
 # info
-See comments in suffix.h for info on the new SACA
+See comments in suffix.h for info on the new SACA and [General Description of DAware](https://github.com/akamiru/sort/wiki/General-Description-of-DAware) in the wiki for a high level description.
 
 See inplace.h for the three-pivot quicksort
 
