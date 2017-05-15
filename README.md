@@ -10,7 +10,8 @@ Daware is now able to use additional memory to speed up the sorting and is recur
 
 # benchmark
 benchmark results for the modified libdivsufsort
-####benchmark results on the gauntlet corpus (times include ONLY the trsort/daware calls):
+###benchmark results on the gauntlet corpus (times include ONLY the trsort/daware calls):
+
 | File            |    Size    |   daware    |    trsort   | speed up |
 |-----------------|-----------:|------------:|------------:|---------:|
 | abac            |     200000 |     0.00052 | **0.00037** |  0.71137 |
@@ -26,13 +27,15 @@ benchmark results for the modified libdivsufsort
 | test3           |    2097088 | **0.01996** |     0.03738 |  1.87229 |
 | sum             |   67023574 | **1.41139** |     3.41009 |  2.41612 |
 
-####benchmark results for enwik8 and enwik9 from the LTCB (times include ONLY the trsort/daware calls):
+###benchmark results for enwik8 and enwik9 from the LTCB (times include ONLY the trsort/daware calls):
+
 | File            |    Size    |   daware    |    trsort   | speed up |
 |-----------------|-----------:|------------:|------------:|---------:|
 | enwik8          |  100000000 | **1.95499** |     2.23273 |  1.14207 |
 | enwik9          | 1000000000 | **25.1776** |     39.3035 |  1.56105 |
 
-####benchmark results for manzini's corpus (times include ONLY the trsort/daware calls):
+###benchmark results for manzini's corpus (times include ONLY the trsort/daware calls):
+
 | File            |    Size    |   daware    |    trsort   | speed up |
 |-----------------|-----------:|------------:|------------:|---------:|
 | chr22.dna       |   34553758 | **0.61256** |     0.94316 |  1.53970 |
